@@ -113,7 +113,8 @@ def _fetch_comments(channel, version, after=None):
     reddit_queue = os.environ['AMQP_REDDIT_PROXY_QUEUE']
     response_queue = os.environ['AMQP_RESPONSE_QUEUE_PREFIX'] + '-comments'
     subreddits = os.environ['SUBREDDITS'].split(',')
-    channel.queue_declare()
+    channel.queue_declare(reddit_queue)
+    channel.queue_declare(response_queue)
 
     msg_uuid = uuid.uuid4()
 
