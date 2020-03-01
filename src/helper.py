@@ -68,6 +68,7 @@ def setup_clean_shutdown(logger, listeners):
     logger = logger.with_iden('helper.py')
 
     shutdown_seen = False
+
     def handle_shutdown(sig_num=None, frame=None):
         nonlocal shutdown_seen
         if shutdown_seen:
@@ -75,6 +76,7 @@ def setup_clean_shutdown(logger, listeners):
         shutdown_seen = True
 
         using_logger = True
+
         def _log(level, msg, *args):
             nonlocal using_logger
             if args:
