@@ -12,11 +12,11 @@ import traceback
 def main():
     """Connects to the database and AMQP service, then periodically scans for
     new comments in relevant subreddits."""
-    connection = database.connect_to_database()
+    connection = helper.connect_to_database()
     logger = Logger(os.environ['APPNAME'], 'runners/comments.py', connection)
     logger.prepare()
 
-    amqp = database.connect_to_amqp(logger)
+    amqp = helper.connect_to_amqp(logger)
 
     cursor = connection.cursor()
     helper.setup_clean_shutdown(logger, (lambda: amqp.close(), lambda: cursor.close()))
@@ -43,7 +43,7 @@ def scan_for_comments(conn, cursor, logger, amqp, version, summons):
     handled_fullnames = Table('handled_fullnames')
 
     while True:
-        comments, after = _fetch_comments(channel, version, after)
+        comments, after = _fetch_comments(logger, channel, version, after)
 
         if not comments:
             logger.print(Level.DEBUG, 'Found no more comments!')
@@ -81,7 +81,10 @@ def scan_for_comments(conn, cursor, logger, amqp, version, summons):
                 summon_to_use = summon
                 break
 
+            num_to_find = num_to_find - 1
             if summon_to_use is None:
+                if num_to_find <= 0:
+                    break
                 continue
 
             logger.print(Level.DEBUG, 'Using summon {}', summon_to_use.name)
@@ -107,9 +110,11 @@ def scan_for_comments(conn, cursor, logger, amqp, version, summons):
 
             logger.print(Level.TRACE, 'Finished handling comment {}', comment['fullname'])
             logger.connection.commit()
+            if num_to_find <= 0:
+                break
 
 
-def _fetch_comments(channel, version, after=None):
+def _fetch_comments(logger, channel, version, after=None):
     reddit_queue = os.environ['AMQP_REDDIT_PROXY_QUEUE']
     response_queue = os.environ['AMQP_RESPONSE_QUEUE_PREFIX'] + '-comments'
     subreddits = os.environ['SUBREDDITS'].split(',')
@@ -134,7 +139,7 @@ def _fetch_comments(channel, version, after=None):
         })
     )
 
-    for method_frame, properties, body_bytes in channel.consume(RESPONSE_QUEUE, inactivity_timeout=600):
+    for method_frame, properties, body_bytes in channel.consume(response_queue, inactivity_timeout=600):
         if method_frame is None:
             print(f'Still waiting on response from message {msg_uuid}!')
             logger.print(Level.ERROR, 'Got no response for message {} in 10 minutes!', msg_uuid)

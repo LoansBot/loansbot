@@ -147,7 +147,7 @@ def signals_delayed(logger):
         for sig_num, frame in signals_detected:
             if sig_num == signal.SIGINT:
                 old_sigint(sig_num, frame)
-            elif sig_num == siginal.SIGTERM:
+            elif sig_num == signal.SIGTERM:
                 old_sigtrm(sig_num, frame)
         signal.signal(signal.SIGINT, old_sigint)
         signal.signal(signal.SIGTERM, old_sigtrm)

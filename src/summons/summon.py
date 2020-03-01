@@ -1,5 +1,6 @@
 """Describes the generic interface that summons are expected to support"""
 
+
 class Summon:
     """An operation which can be triggered by comments or link posts on reddit.
 
