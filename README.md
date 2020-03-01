@@ -11,6 +11,8 @@ that the LoansBot performs - scanning comments, scanning threads, and marking
 pms as read. These use the reddit-proxy service to fairly distribute reddit API
 time while remaining comfortably within API limits.
 
+### Parsing
+
 Since the LoansBot uses reddit as the storage for how commands are posted,
 there are a number of related oddities in the parsing structure. To simplify
 the explanation of what each command is, the following explains various
@@ -28,8 +30,6 @@ components of commands:
   separated by a space. Examples: `$10`, `15€`, `RUB 12.50`, `100 JPY`. If no
   currency is indicated then dollars are assumed.
 - `<ID>`: The primary identifier for a loan.
-
-### Comment Commands
 
 Terminology:
 
@@ -67,3 +67,22 @@ Supported commands:
   been repaid by **amount**. Unlike the standard `$paid` command, this money
   does not automatically get rolled over to other loans if more than the
   original amount is specified.
+
+### Environment Variables
+
+- `APPNAME`: The application name for logging
+- `AMQP_HOST`: The hostname of the amqp service
+- `AMQP_VHOST`: The virtual host for the amqp service
+- `AMQP_PORT`: The port of the amqp service
+- `AMQP_USERNAME`: The username with the amqp service
+- `AMQP_PASSWORD`: The password with the amqp service
+- `AMQP_REDDIT_PROXY_QUEUE`: The name of the queue which the reddit proxy is
+- `AMQP_RESPONSE_QUEUE_PREFIX`: A prefix used for response queues by this service
+  using within the amqp service.
+- `PGHOST`: Host for the database
+- `PGPORT`: Port for the database
+- `PGDATABASE`: Database name for the database
+- `PGUSER`: Username to login as for the database
+- `PGPASSWORD`: Password to login with for the database
+- `SUBREDDITS`: The subreddits that the loansbot listens to, separated by
+  commas

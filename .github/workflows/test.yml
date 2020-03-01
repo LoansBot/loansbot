@@ -1,0 +1,94 @@
+name: CI
+
+on: [push]
+
+jobs:
+  test_loansbot:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.7, 3.8]
+    services:
+      postgres:
+        image: postgres:10
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      rabbitmq:
+        image: rabbitmq
+        ports:
+          - 5672/tcp
+    steps:
+    - name: Setup Python ${{ matrix.python_version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python_version }}
+    - name: Fetch LoansBot/loansbot
+      uses: actions/checkout@v2
+      with:
+        path: ./loansbot
+    - name: Fetch LoansBot/logging
+      uses: actions/checkout@v2
+      with:
+        repository: LoansBot/logging
+        path: ./logging
+    - name: Building working directory
+      run: |
+        mkdir ./working
+        mv ./loansbot/src ./working/src
+        mv ./logging/src/lblogging ./working/src/lblogging
+    - name: Generic python setup
+      run: |
+        python -m pip install --upgrade pip
+        sudo apt update
+        sudo apt install -yqq build-essential libcurl4-gnutls-dev libxml2-dev libssl-dev postgresql-common libpq-dev postgresql-client
+    - name: Installing logging dependencies
+      run: |
+        python -m pip install -r ./logging/requirements.txt
+    - name: Installing our dependencies
+      run: |
+        python -m pip install -r ./loansbot/requirements.txt
+    - name: Lint with flake8
+      working-directory: ./working
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82,F841,E302,E303,F401,E261,E306,E131,W292 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Fetch LoansBot/database
+      uses: actions/checkout@v2
+      with:
+        repository: LoansBot/database
+        path: ./database
+    - name: Setup database dependencies
+      run: |
+        python -m pip install -r ./database/requirements.txt
+    - name: Initialize database
+      working-directory: ./database/src
+      run: |
+        cp ../settings.ini.sample ./settings.ini
+        python run_migrations.py
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_PORT: ${{ job.services.postgres.ports['5432'] }}
+    - name: Run tests
+      working-directory: ./working/src
+      run: |
+        echo TODO
+    - name: Get database logs
+      if: always()
+      working-directory: working/src
+      run: |
+        python -m lblogging.query
+      env:
+        PGHOST: localhost
+        PGPORT: ${{ job.services.postgres.ports['5432'] }}
+        PGDATABASE: postgres
+        PGUSER: postgres
+        PGPASSWORD: dev
