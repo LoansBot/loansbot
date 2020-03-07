@@ -52,7 +52,7 @@ def connect_to_amqp(logger):
             time.sleep(sleep_time)
 
         print(f'Connecting to AMQP.. (attempt {attempt + 1}/5)')
-        logger.print(Level.TRACE, 'Connecting to AMQP (attempt {} of 5}', attempt + 1)
+        logger.print(Level.TRACE, 'Connecting to AMQP (attempt {} of 5)', attempt + 1)
         logger.connection.commit()
         try:
             return pika.BlockingConnection(parameters)
@@ -80,7 +80,7 @@ def connect_to_cache(logger):
             time.sleep(sleep_time)
 
         print(f'Connecting to memcached.. (attempt {attempt + 1}/5)')
-        logger.print(Level.TRACE, 'Connecting to memcached (attempt {} of 5}', attempt + 1)
+        logger.print(Level.TRACE, 'Connecting to memcached (attempt {} of 5)', attempt + 1)
         logger.connection.commit()
         try:
             client = membase.Client((host, port))
