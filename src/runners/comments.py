@@ -95,17 +95,18 @@ def scan_for_comments(conn, cursor, logger, amqp, version, summons):
                 continue
             # TODO check author
 
-            logger.print(Level.DEBUG, 'Using summon {}', summon_to_use.name)
-            try:
-                summon_to_use.handle_comment(logger, conn, amqp, channel, comment)
-            except:  # noqa
-                conn.rollback()
-                logger.exception(Level.WARN, 'While using summon {} on comment {}', summon_to_use.name, comment)
-                traceback.print_exc()
-                logger.connection.commit()
+            if summon_to_use is not None:
+                logger.print(Level.DEBUG, 'Using summon {}', summon_to_use.name)
+                try:
+                    summon_to_use.handle_comment(logger, conn, amqp, channel, comment)
+                except:  # noqa
+                    conn.rollback()
+                    logger.exception(Level.WARN, 'While using summon {} on comment {}', summon_to_use.name, comment)
+                    traceback.print_exc()
+                    logger.connection.commit()
 
-            conn.commit()
-            logger.connection.commit()
+                conn.commit()
+                logger.connection.commit()
 
             cursor.execute(
                 Query.into(handled_fullnames)
