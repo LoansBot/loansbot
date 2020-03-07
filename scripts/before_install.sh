@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-sudo yum -y install python3 make glibc-devel gcc patch python3-devel libcurl4-gnutls-dev libxml2-dev libssl-dev postgresql-common postgresql-devel postgresql-client
+sudo yum -y install python3 make glibc-devel gcc patch python3-devel postgresql-devel
 sudo python3 -m pip install --upgrade pip
 sudo python3 -m pip install supervisor
 sudo /usr/local/bin/supervisorctl stop all || :
