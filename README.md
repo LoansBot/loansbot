@@ -89,6 +89,8 @@ Supported commands:
 - `PGPASSWORD`: Password to login with for the database
 - `SUBREDDITS`: The subreddits that the loansbot listens to, separated by
   commas
+- `MEMCACHED_HOST`: The hostname for the memcached service
+- `MEMCACHED_PORT`: The port for the memcached service
 
 ## Repayments
 

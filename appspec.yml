@@ -1,0 +1,28 @@
+version: 0.0
+os: linux
+files:
+  - source: src
+    destination: /webapps/loansbot/src
+  - source: logging/src/lblogging
+    destination: /webapps/loansbot/src/lblogging
+  - source: logging/logging-requirements.txt
+    destination: /webapps/loansbot
+  - source: requirements.txt
+    destination: /webapps/loansbot
+  - source: scripts
+    destination: /webapps/loansbot/scripts
+  - source: cfg
+    destination: /webapps/loansbot/cfg
+hooks:
+  BeforeInstall:
+    - location: scripts/before_install.sh
+      timeout: 180
+  AfterInstall:
+    - location:  scripts/after_install.sh
+      timeout: 180
+  ApplicationStart:
+    - location: scripts/startup_server.sh
+      timeout: 180
+  ApplicationStop:
+    - location: scripts/stop_server.sh
+      timeout: 180
