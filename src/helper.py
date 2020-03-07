@@ -71,7 +71,7 @@ def connect_to_cache(logger):
     host = os.environ['MEMCACHED_HOST']
     port = int(os.environ['MEMCACHED_PORT'])
 
-    for attempt int range(5):
+    for attempt in range(5):
         if attempt > 0:
             sleep_time = 4 ** attempt
             print(f'Sleeping for {sleep_time} seconds...')
