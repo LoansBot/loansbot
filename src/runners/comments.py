@@ -129,7 +129,7 @@ def _fetch_comments(logger, channel, version, after=None):
     channel.queue_declare(reddit_queue)
     channel.queue_declare(response_queue)
 
-    msg_uuid = uuid.uuid4()
+    msg_uuid = str(uuid.uuid4())
 
     channel.basic_publish(
         '',
