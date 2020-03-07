@@ -28,6 +28,11 @@ def main():
     amqp.close()
     amqp = None
 
+    # We connect to the cache service here to verify it's up
+    memclient = helper.connect_to_cache(logger)
+    memclient.close()
+    memclient = None
+
     logger.print(Level.TRACE, 'Spawning subprocesses...')
     logger.connection.commit()
     subprocs = []

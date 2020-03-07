@@ -9,6 +9,7 @@ from lblogging import Level
 import signal
 import atexit
 from contextlib import contextmanager
+from pymemcache.client import base as membase
 
 
 def connect_to_database():
@@ -51,6 +52,8 @@ def connect_to_amqp(logger):
             time.sleep(sleep_time)
 
         print(f'Connecting to AMQP.. (attempt {attempt + 1}/5)')
+        logger.print(Level.TRACE, 'Connecting to AMQP (attempt {} of 5)', attempt + 1)
+        logger.connection.commit()
         try:
             return pika.BlockingConnection(parameters)
         except pika.exceptions.AMQPConnectionError:
@@ -59,6 +62,36 @@ def connect_to_amqp(logger):
             logger.connection.commit()
 
     raise Exception('Failed to connect to AMQP (and exhausted all attempts)')
+
+
+def connect_to_cache(logger):
+    """Connects to the cache server. Will retry up to 5 times with exponential
+    backoff. Logs to the given logger (renamed)"""
+    logger = logger.with_iden('helper.py')
+    host = os.environ['MEMCACHED_HOST']
+    port = int(os.environ['MEMCACHED_PORT'])
+
+    for attempt in range(5):
+        if attempt > 0:
+            sleep_time = 4 ** attempt
+            print(f'Sleeping for {sleep_time} seconds...')
+            logger.print(Level.DEBUG, 'Sleeping for {} seconds...', sleep_time)
+            logger.connection.commit()
+            time.sleep(sleep_time)
+
+        print(f'Connecting to memcached.. (attempt {attempt + 1}/5)')
+        logger.print(Level.TRACE, 'Connecting to memcached (attempt {} of 5)', attempt + 1)
+        logger.connection.commit()
+        try:
+            client = membase.Client((host, port))
+            client.get('test')
+            return client
+        except ConnectionRefusedError:
+            traceback.print_exc()
+            logger.exception(Level.WARN)
+            logger.connection.commit()
+
+    raise Exception('Failed to connect to memcached (and exhausted all attempts)')
 
 
 def setup_clean_shutdown(logger, listeners):

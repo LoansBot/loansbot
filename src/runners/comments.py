@@ -17,9 +17,17 @@ def main():
     logger.prepare()
 
     amqp = helper.connect_to_amqp(logger)
+    memclient = helper.connect_to_cache(logger)
 
     cursor = connection.cursor()
-    helper.setup_clean_shutdown(logger, (lambda: amqp.close(), lambda: cursor.close()))
+    helper.setup_clean_shutdown(
+        logger,
+        (
+            lambda: amqp.close(),
+            lambda: cursor.close(),
+            lambda: memclient.close()
+        )
+    )
 
     summons = []
 
@@ -71,7 +79,6 @@ def scan_for_comments(conn, cursor, logger, amqp, version, summons):
         for comment in comments:
             if comment['fullname'] in seen_set:
                 continue
-
             logger.print(Level.TRACE, 'Checking comment {}', comment['fullname'])
 
             summon_to_use = None
@@ -86,6 +93,7 @@ def scan_for_comments(conn, cursor, logger, amqp, version, summons):
                 if num_to_find <= 0:
                     break
                 continue
+            # TODO check author
 
             logger.print(Level.DEBUG, 'Using summon {}', summon_to_use.name)
             try:
@@ -121,7 +129,7 @@ def _fetch_comments(logger, channel, version, after=None):
     channel.queue_declare(reddit_queue)
     channel.queue_declare(response_queue)
 
-    msg_uuid = uuid.uuid4()
+    msg_uuid = str(uuid.uuid4())
 
     channel.basic_publish(
         '',
