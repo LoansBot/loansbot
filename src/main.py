@@ -21,8 +21,6 @@ def main():
     logger = Logger(os.environ['APPNAME'], 'main.py', connection)
     logger.prepare()
 
-    helper.setup_clean_shutdown(logger, [])
-
     # We connect to the amqp service here to verify it's up
     amqp = helper.connect_to_amqp(logger)
     amqp.close()
@@ -44,11 +42,31 @@ def main():
         subprocs.append(proc)
     logger.connection.commit()
 
+    def shutdown_subprocs():
+        logger.print(Level.INFO, 'Shutting down subprocesses... (pid={})', os.getpid())
+        logger.connection.commit()
+        for proc in subprocs:
+            pid = proc.pid
+            logger.print(Level.DEBUG, 'Shutting down pid={}', pid)
+            logger.connection.commit()
+            proc.terminate()
+            proc.join()
+            logger.print(Level.INFO, 'Shutdown subprocess pid={}', pid)
+            logger.connection.commit()
+
+    shutting_down = False
+
+    def set_shutting_down():
+        nonlocal shutting_down
+        shutting_down = True
+
+    helper.setup_clean_shutdown(logger, (shutdown_subprocs, set_shutting_down))
+
     print('Successfully started up')
     logger.print(Level.INFO, 'Successfully started up!')
     logger.connection.commit()
 
-    while True:
+    while not shutting_down:
         running = True
         for proc in subprocs:
             if not proc.is_alive():
@@ -57,6 +75,8 @@ def main():
                 running = False
                 break
         if not running:
+            break
+        if shutting_down:
             break
         time.sleep(10)
 
