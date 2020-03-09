@@ -72,11 +72,13 @@ jobs:
     - name: Initialize database
       working-directory: ./database/src
       run: |
-        cp ../settings.ini.sample ./settings.ini
         python run_migrations.py
       env:
         DATABASE_HOST: localhost
         DATABASE_PORT: ${{ job.services.postgres.ports['5432'] }}
+        DATABASE_USER: postgres
+        DATABASE_PASSWORD: dev
+        DATABASE_DBNAME: postgres
     - name: Run tests
       working-directory: ./working/src
       run: |
