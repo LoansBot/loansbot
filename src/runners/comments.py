@@ -179,13 +179,16 @@ def _fetch_comments(logger, channel, version, after=None):
         logger.print(Level.TRACE, 'Found response to {}', msg_uuid)
         logger.connection.commit()
         channel.basic_ack(method_frame.delivery_tag)
+        break
 
-        if body['type'] != 'copy':
-            logger.print(
-                Level.INFO,
-                'Got unexpected response type {} from message {} '
-                '- treating as if there are no messages',
-                body['type']
-            )
-            return [], None
-        return body['info']['comments'], body['info'].get('after')
+    channel.cancel()
+
+    if body['type'] != 'copy':
+        logger.print(
+            Level.INFO,
+            'Got unexpected response type {} from message {} '
+            '- treating as if there are no messages',
+            body['type']
+        )
+        return [], None
+    return body['info']['comments'], body['info'].get('after')
