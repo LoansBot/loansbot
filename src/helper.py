@@ -160,6 +160,7 @@ def setup_clean_shutdown(logger, listeners):
         _log(Level.INFO, 'Clean shutdown finished normally')
         logger.close()
         logger.connection.close()
+        os._exit(0)
 
     signal.signal(signal.SIGINT, handle_shutdown)
     signal.signal(signal.SIGTERM, handle_shutdown)
