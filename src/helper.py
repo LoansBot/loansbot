@@ -139,9 +139,17 @@ def setup_clean_shutdown(logger, listeners):
                     using_logger = False
 
         if sig_num is not None:
-            _log(Level.INFO, 'Clean shutdown started: Received signal {}', sig_num)
+            _log(
+                Level.INFO,
+                'Clean shutdown started: Received signal {}. PID={}',
+                sig_num, os.getpid()
+            )
         else:
-            _log(Level.INFO, 'Clean shutdown started (application exit)')
+            _log(
+                Level.INFO,
+                'Clean shutdown started (application exit). PID={}',
+                os.getpid()
+            )
 
         for lst in listeners:
             try:
