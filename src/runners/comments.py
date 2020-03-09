@@ -97,7 +97,11 @@ def scan_for_comments(conn, cursor, logger, amqp, version, summons):
                     summon_to_use.handle_comment(logger, conn, amqp, channel, comment)
                 except:  # noqa
                     conn.rollback()
-                    logger.exception(Level.WARN, 'While using summon {} on comment {}', summon_to_use.name, comment)
+                    logger.exception(
+                        Level.WARN,
+                        'While using summon {} on comment {}',
+                        summon_to_use.name, comment
+                    )
                     traceback.print_exc()
                     logger.connection.commit()
 
@@ -144,7 +148,15 @@ def _fetch_comments(logger, channel, version, after=None):
         })
     )
 
-    for method_frame, properties, body_bytes in channel.consume(response_queue, inactivity_timeout=600):
+    logger.print(
+        Level.TRACE,
+        'Requesting subreddit comments (subreddits: {}) on request queue {} '
+        'with the response sent to {}; our message uuid is {}',
+        subreddits, reddit_queue, response_queue, msg_uuid
+    )
+    logger.connection.commit()
+
+    for method_frame, properties, body_bytes in channel.consume(response_queue, inactivity_timeout=600):  # noqa: E501
         if method_frame is None:
             print(f'Still waiting on response from message {msg_uuid}!')
             logger.print(Level.ERROR, 'Got no response for message {} in 10 minutes!', msg_uuid)
@@ -155,7 +167,11 @@ def _fetch_comments(logger, channel, version, after=None):
         body = json.loads(body_str)
 
         if body['uuid'] != msg_uuid:
-            logger.print(Level.DEBUG, 'Ignoring message {} to our response queue (expecting {})', body['uuid'], msg_uuid)
+            logger.print(
+                Level.DEBUG,
+                'Ignoring message {} to our response queue (expecting {})',
+                body['uuid'], msg_uuid
+            )
             logger.connection.commit()
             channel.basic_nack(method_frame.delivery_tag, requeue=False)
             continue
