@@ -188,7 +188,8 @@ def _fetch_comments(logger, channel, version, after=None):
             Level.INFO,
             'Got unexpected response type {} from message {} '
             '- treating as if there are no messages',
-            body['type']
+            body['type'], msg_uuid
         )
+        logger.connection.commit()
         return [], None
     return body['info']['comments'], body['info'].get('after')
