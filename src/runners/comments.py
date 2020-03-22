@@ -27,11 +27,11 @@ def main():
     logger = None
 
     while True:
-        amqp = helper.connect_to_amqp(logger)
         connection = helper.connect_to_database()
         cursor = connection.cursor()
         logger = Logger(os.environ['APPNAME'], 'runners/comments.py', connection)
         logger.prepare()
+        amqp = helper.connect_to_amqp(logger)
 
         scan_for_comments(connection, cursor, logger, amqp, version, summons)
 
