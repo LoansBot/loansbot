@@ -12,32 +12,37 @@ import traceback
 def main():
     """Connects to the database and AMQP service, then periodically scans for
     new comments in relevant subreddits."""
+    summons = []
+    version = time.time()
+
     connection = helper.connect_to_database()
     logger = Logger(os.environ['APPNAME'], 'runners/comments.py', connection)
     logger.prepare()
-
-    amqp = helper.connect_to_amqp(logger)
-    memclient = helper.connect_to_cache(logger)
-
-    cursor = connection.cursor()
-    helper.setup_clean_shutdown(
-        logger,
-        (
-            lambda: amqp.close(),
-            lambda: cursor.close(),
-            lambda: memclient.close()
-        )
-    )
-
-    summons = []
-
-    version = time.time()
     logger.print(Level.TRACE, 'Successfully initialized at version={}', version)
     logger.connection.commit()
+    logger.close()
+    connection.close()
+
+    connection = None
+    logger = None
 
     while True:
+        amqp = helper.connect_to_amqp(logger)
+        connection = helper.connect_to_database()
+        cursor = connection.cursor()
+        logger = Logger(os.environ['APPNAME'], 'runners/comments.py', connection)
+        logger.prepare()
+
         scan_for_comments(connection, cursor, logger, amqp, version, summons)
-        time.sleep(60)
+
+        logger.close()
+        cursor.close()
+        connection.close()
+        amqp.close()
+        try:
+            time.sleep(60)
+        except:  # noqa
+            break
 
 
 def scan_for_comments(conn, cursor, logger, amqp, version, summons):
