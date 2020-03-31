@@ -10,6 +10,7 @@ from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
 import lbshared.retry_helper as retry_helper
 import atexit
+import signal
 
 
 SUBPROCESSES = ('runners.comments',)
@@ -30,7 +31,13 @@ def main():
             proc.start()
             subprocs.append(proc)
 
-    def onexit():
+    shutting_down = False
+
+    def onexit(*args, **kwargs):
+        nonlocal shutting_down
+        if shutting_down:
+            return
+        shutting_down = True
         try:
             with LazyIntegrations(logger_iden='main.py#main#onexit') as itgs:
                 itgs.logger.print(Level.INFO, 'Shutting down')
@@ -43,15 +50,22 @@ def main():
                 proc.join()
 
     atexit.register(onexit)
+    signal.signal(signal.SIGINT, onexit)
+    signal.signal(signal.SIGTERM, onexit)
 
     running = True
-    while running:
-        time.sleep(10)
+    while running and not shutting_down:
         for proc in subprocs:
             if not proc.is_alive():
                 with LazyIntegrations(logger_iden='main.py#main') as itgs:
                     itgs.logger.print(Level.ERROR, 'A child process has died! Terminating...')
                 running = False
+                break
+        if not running:
+            break
+        for _ in range(20):
+            time.sleep(0.5)
+            if shutting_down:
                 break
 
 
