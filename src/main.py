@@ -31,12 +31,16 @@ def main():
             subprocs.append(proc)
 
     def onexit():
-        for proc in subprocs:
-            if proc.is_alive():
-                proc.terminate()
+        try:
+            with LazyIntegrations(logger_iden='main.py#main#onexit') as itgs:
+                itgs.logger.print(Level.INFO, 'Shutting down')
+        finally:
+            for proc in subprocs:
+                if proc.is_alive():
+                    proc.terminate()
 
-        for proc in subprocs:
-            proc.join()
+            for proc in subprocs:
+                proc.join()
 
     atexit.register(onexit)
 
