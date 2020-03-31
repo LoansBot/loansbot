@@ -18,19 +18,13 @@ class Summon:
         """
         raise NotImplementedError()
 
-    def handle_comment(self, logger, conn, amqp, channel, comment):
+    def handle_comment(self, itgs, comment):
         """Handles the given comment. This is expected to have side-effects,
         such as saving things to the database, logging, and responding via
         reddit using the reddit proxy.
 
-        :param logger: The logger to use. This function should not assume
-            that the logger is on the same database as everything else. It
-            should also not assume it isn't on the same database as everything
-            else. The logger will not auto-commit.
-        :param conn: The database connection to use for non-logging related
-            calls.
-        :param amqp: The advanced message queue protocol connection
-        :param channel: The channel within the advanced message queue to use
+        :param itgs: The LazyIntegrations to use for connecting to other
+            services
         :param comment: The comment that needs to be handled
         """
         raise NotImplementedError()

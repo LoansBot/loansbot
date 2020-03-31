@@ -9,3 +9,4 @@ rm -rf /webapps/loansbot/scripts
 rm -rf /webapps/loansbot/cfg
 rm -f /webapps/loansbot/requirements.txt
 rm -f /webapps/loansbot/logging-requirements.txt
+rm -f /webapps/loansbot/shared-requirements.txt
