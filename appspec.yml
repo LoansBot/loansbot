@@ -7,6 +7,10 @@ files:
     destination: /webapps/loansbot/src/lblogging
   - source: logging/logging-requirements.txt
     destination: /webapps/loansbot
+  - source: shared/src/lbshared
+    destination: /webapps/loansbot/src/lbshared
+  - source: shared/shared-requirements.txt
+    destination: /webapps/loansbot
   - source: requirements.txt
     destination: /webapps/loansbot
   - source: scripts

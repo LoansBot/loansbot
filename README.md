@@ -79,18 +79,18 @@ Supported commands:
 - `AMQP_PORT`: The port of the amqp service
 - `AMQP_USERNAME`: The username with the amqp service
 - `AMQP_PASSWORD`: The password with the amqp service
-- `AMQP_REDDIT_PROXY_QUEUE`: The name of the queue which the reddit proxy is
-- `AMQP_RESPONSE_QUEUE_PREFIX`: A prefix used for response queues by this service
-  using within the amqp service.
 - `PGHOST`: Host for the database
 - `PGPORT`: Port for the database
 - `PGDATABASE`: Database name for the database
 - `PGUSER`: Username to login as for the database
 - `PGPASSWORD`: Password to login with for the database
-- `SUBREDDITS`: The subreddits that the loansbot listens to, separated by
-  commas
 - `MEMCACHED_HOST`: The hostname for the memcached service
 - `MEMCACHED_PORT`: The port for the memcached service
+- `AMQP_REDDIT_PROXY_QUEUE`: The name of the queue which the reddit proxy is
+- `AMQP_RESPONSE_QUEUE_PREFIX`: A prefix used for response queues by this service
+  using within the amqp service.
+- `SUBREDDITS`: The subreddits that the loansbot listens to, separated by
+  commas
 
 ## Repayments
 
