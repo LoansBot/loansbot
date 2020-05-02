@@ -2,6 +2,12 @@
 reddit proxy.
 """
 from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
+import os
+import json
+import uuid
+import time
+from lblogging import Level
+
 
 def send_request(itgs: LazyItgs, iden: str, version: float, typ: str, args: dict) -> dict:
     """Sends a request with the given type and arguments to the reddit proxy,
@@ -48,7 +54,6 @@ def send_request(itgs: LazyItgs, iden: str, version: float, typ: str, args: dict
         'Sent request of type {} with response queue {} and version {} uuid={}',
         typ, response_queue, version, msg_uuid
     )
-
 
     consumer = itgs.channel.consume(response_queue, inactivity_timeout=600)
     for method_frame, properties, body_bytes in consumer:

@@ -1,8 +1,6 @@
 """This is the entry point of the comment-scanning daemon subprocess."""
 import time
 import os
-import uuid
-import json
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 import traceback
 import utils.reddit_proxy
@@ -105,7 +103,7 @@ def _fetch_comments(itgs, version, after=None):
     subreddits = os.environ['SUBREDDITS'].split(',')
 
     body = utils.reddit_proxy.send_request(
-        itgs, 'comments', version, typ, {
+        itgs, 'comments', version, 'subreddit_comments', {
             'subreddit': subreddits,
             'after': after
         }

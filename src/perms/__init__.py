@@ -1,1 +1,1 @@
-from .manager import can_interact
+from .manager import can_interact  # noqa: F401

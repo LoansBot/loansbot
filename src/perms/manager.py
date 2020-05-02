@@ -1,13 +1,22 @@
 """Responsible for determining if a particular user has access to the LoansBot.
 """
 from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
+import utils.reddit_proxy
 import time
+import os
 
-# The collection we use in ArangoDB for caching user info
+
 COLLECTION = 'perms'
+"""The collection we use in ArangoDB for caching user info"""
+
+KARMA_MIN = int(os.environ['KARMA_MIN'])
+"""The minimum amount of karma to interact with this subreddit"""
+
+ACCOUNT_AGE_SECONDS_MIN = float(os.environ['ACCOUNT_AGE_SECONDS_MIN'])
+"""The minimum account age to interact"""
 
 
-def can_interact(itgs: LazyItgs, username: str, rpiden: str) -> bool:
+def can_interact(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -> bool:
     """Determines if the user with the given username has permission to
     interact via the LoansBot. Interactions via the LoansBot are not
     privileged and are often subject to review.
@@ -16,24 +25,25 @@ def can_interact(itgs: LazyItgs, username: str, rpiden: str) -> bool:
         itgs (LazyItgs): Grants access to networked components
         username (str): The reddit username of the person of interest
         rpiden (str): The identifier to use when using the reddit proxy.
+        rpversion (float): The versino number to use when using the reddit proxy
     """
-    karma_min = int(os.environ['KARMA_MIN'])
-    acc_age_min = float(os.environ['ACCOUNT_AGE_SECONDS_MIN'])
 
-    info = fetch_info(itgs, username, rpiden)
+    info = fetch_info(itgs, username, rpiden, rpversion)
+    if info is None:
+        return False
     return (
         not info['borrow_banned']
         and (
             (info['borrow_moderator'] or info['borrow_approved_submitter'])
             or (
-                info['karma'] > karma_min
-                and time.time() - info['account_created_at'] > acc_age_min
+                info['karma'] > KARMA_MIN
+                and time.time() - info['account_created_at'] > ACCOUNT_AGE_SECONDS_MIN
             )
         )
     )
 
 
-def fetch_info(itgs: LazyItgs, username: str, rpiden: str) -> dict:
+def fetch_info(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -> dict:
     """Get the information we have on the given user. This will attempt to
     fetch it from the cache, but if it is not there or is too old we will
     hit reddit.
@@ -42,9 +52,10 @@ def fetch_info(itgs: LazyItgs, username: str, rpiden: str) -> dict:
         itgs (LazyItgs): Grants access to networked components
         username (str): The reddit username of the person of interest
         rpiden (str): The identifier to use when using the reddit proxy
+        rpversion (float): The version number to use when using the reddit proxy
 
     Returns:
-        A dict with the following:
+        None if the accoutn does not exist, othewise a dict with the following:
 
         karma (int): How much combined karma the user has
         account_created_at (float): UTC time in seconds the account was created
@@ -56,7 +67,51 @@ def fetch_info(itgs: LazyItgs, username: str, rpiden: str) -> dict:
         borrow_banned (bool):
             True if they are banned on /r/borrow, otherwise false
     """
-    pass
+    doc = itgs.kv_db.collection(COLLECTION).document(username.lower())
+    cache_hit = doc.read()
+    if (
+            cache_hit and
+            (time.time() - doc.body['checked_karma_at']) > 60 * 60 * 24 and
+            doc.body['karma'] < KARMA_MIN and
+            (
+                doc.body['karma'] +
+                (time.time() - doc.body['checked_karma_at']) * 100 / (60 * 60 * 24)
+                >= KARMA_MIN
+            )
+    ):
+        # If they earned 100 karma/day they would have enough karma by now
+        cache_hit = False
+
+    if not cache_hit:
+        karma_and_age = utils.reddit_proxy.send_request(
+            itgs, rpiden, rpversion, 'show_user',
+            {'username': username}
+        )
+        if karma_and_age['type'] != 'copy':
+            return None
+        is_moderator = utils.reddit_proxy.send_request(
+            itgs, rpiden, rpversion, 'user_is_moderator',
+            {'subreddit': 'borrow', 'username': username}
+        )
+        is_approved = utils.reddit_proxy.send_request(
+            itgs, rpiden, rpversion, 'user_is_approved',
+            {'subreddit': 'borrow', 'username': username}
+        )
+        is_banned = utils.reddit_proxy.send_request(
+            itgs, rpiden, rpversion, 'user_is_banned',
+            {'subreddit': 'borrow', 'username': username}
+        )
+        doc.body = {
+            'karma': karma_and_age['data']['cumulative_karma'],
+            'account_created_at': karma_and_age['created_at_utc_seconds'],
+            'borrow_approved_submitter': is_approved['data']['approved'],
+            'borrow_moderator': is_moderator['data']['moderator'],
+            'borrow_banned': is_banned['data']['borrow_banned'],
+            'checked_karma_at': time.time()
+        }
+        doc.create_or_overwrite(ttl=60 * 60 * 24 * 365)
+
+    return doc.body
 
 
 def flush_cache(itgs: LazyItgs, username: str) -> bool:
@@ -70,4 +125,4 @@ def flush_cache(itgs: LazyItgs, username: str) -> bool:
     Returns:
         True if there was a cache to flush and it was deleted, false otherwise.
     """
-    pass
+    return itgs.kv_db.collection(COLLECTION).force_delete_doc(username)
