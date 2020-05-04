@@ -52,9 +52,9 @@ def scan_for_modactions(itgs: LazyItgs, version: float):
             finished = True
 
         for act in actions:
-            if last_seen is None or act['created_at'] > last_seen:
+            if last_seen is None or act['created_utc'] > last_seen:
                 handle_action(itgs, act)
-                new_last_seen = act['created_at']
+                new_last_seen = act['created_utc']
             else:
                 finished = True
                 break
