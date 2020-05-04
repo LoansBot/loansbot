@@ -1,10 +1,9 @@
 """This is the entry point of the comment-scanning daemon subprocess."""
 import time
 import os
-import uuid
-import json
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 import traceback
+import utils.reddit_proxy
 
 from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
@@ -12,8 +11,7 @@ from lbshared.signal_helper import delay_signals
 
 
 def main():
-    """Connects to the database and AMQP service, then periodically scans for
-    new comments in relevant subreddits."""
+    """Periodically scans for new comments in relevant subreddits."""
     summons = []
     version = time.time()
 
@@ -101,72 +99,21 @@ def scan_for_comments(itgs, version, summons):
 
 
 def _fetch_comments(itgs, version, after=None):
-    reddit_queue = os.environ['AMQP_REDDIT_PROXY_QUEUE']
-    response_queue = os.environ['AMQP_RESPONSE_QUEUE_PREFIX'] + '-comments'
     subreddits = os.environ['SUBREDDITS'].split(',')
-    itgs.channel.queue_declare(reddit_queue)
-    itgs.channel.queue_declare(response_queue)
 
-    msg_uuid = str(uuid.uuid4())
-
-    itgs.channel.basic_publish(
-        '',
-        reddit_queue,
-        json.dumps({
-            'type': 'subreddit_comments',
-            'response_queue': response_queue,
-            'uuid': msg_uuid,
-            'version_utc_seconds': version,
-            'sent_at': time.time(),
-            'args': {
-                'subreddit': subreddits,
-                'after': after
-            }
-        })
+    body = utils.reddit_proxy.send_request(
+        itgs, 'comments', version, 'subreddit_comments', {
+            'subreddit': subreddits,
+            'after': after
+        }
     )
-
-    itgs.logger.print(
-        Level.TRACE,
-        'Requesting subreddit comments (subreddits: {}) on request queue {} '
-        'with the response sent to {}; our message uuid is {}',
-        subreddits, reddit_queue, response_queue, msg_uuid
-    )
-
-    for method_frame, properties, body_bytes in itgs.channel.consume(response_queue, inactivity_timeout=600):  # noqa: E501
-        if method_frame is None:
-            print(f'Still waiting on response from message {msg_uuid}!')
-            itgs.logger.print(
-                Level.ERROR,
-                'Got no response for message {} in 10 minutes!',
-                msg_uuid
-            )
-            itgs.logger.connection.commit()
-            continue
-
-        body_str = body_bytes.decode('utf-8')
-        body = json.loads(body_str)
-
-        if body['uuid'] != msg_uuid:
-            itgs.logger.print(
-                Level.DEBUG,
-                'Ignoring message {} to our response queue (expecting {})',
-                body['uuid'], msg_uuid
-            )
-            itgs.channel.basic_nack(method_frame.delivery_tag, requeue=False)
-            continue
-
-        itgs.logger.print(Level.TRACE, 'Found response to {}', msg_uuid)
-        itgs.channel.basic_ack(method_frame.delivery_tag)
-        break
-
-    itgs.channel.cancel()
 
     if body['type'] != 'copy':
         itgs.logger.print(
             Level.INFO,
-            'Got unexpected response type {} from message {} '
+            'Got unexpected response type {} for comments request'
             '- treating as if there are no messages',
-            body['type'], msg_uuid
+            body['type']
         )
         return [], None
     return body['info']['comments'], body['info'].get('after')

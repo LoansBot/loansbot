@@ -91,6 +91,9 @@ Supported commands:
   using within the amqp service.
 - `SUBREDDITS`: The subreddits that the loansbot listens to, separated by
   commas
+- `KARMA_MIN`: The minimum amount of karma to interact with the loansbot
+- `ACCOUNT_AGE_SECONDS_MIN`: The minimum account age in fractional seconds to
+  interact with the loansbot
 
 ## Repayments
 
