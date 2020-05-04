@@ -11,8 +11,7 @@ from lbshared.signal_helper import delay_signals
 
 
 def main():
-    """Connects to the database and AMQP service, then periodically scans for
-    new comments in relevant subreddits."""
+    """Periodically scans for new comments in relevant subreddits."""
     summons = []
     version = time.time()
 
