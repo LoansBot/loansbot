@@ -67,7 +67,7 @@ def fetch_info(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -> 
         borrow_banned (bool):
             True if they are banned on /r/borrow, otherwise false
     """
-    doc = itgs.kv_db.collection(COLLECTION).document(username.lower())
+    doc = itgs.kvs_db.collection(COLLECTION).document(username.lower())
     cache_hit = doc.read()
     if (
             cache_hit and
@@ -125,4 +125,4 @@ def flush_cache(itgs: LazyItgs, username: str) -> bool:
     Returns:
         True if there was a cache to flush and it was deleted, false otherwise.
     """
-    return itgs.kv_db.collection(COLLECTION).force_delete_doc(username)
+    return itgs.kvs_db.collection(COLLECTION).force_delete_doc(username)
