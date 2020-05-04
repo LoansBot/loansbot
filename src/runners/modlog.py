@@ -5,6 +5,7 @@ If a user is promoted to moderator, demoted from moderator, approved,
 unapproved, banned, or unbanned we flush their permissions cache.
 """
 import time
+import os
 import utils.reddit_proxy
 import perms.manager
 from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
@@ -26,17 +27,17 @@ def main():
     """Periodically scans the moderator log of /r/borrow to check if any users
     need their permissions cache flushed. This avoids permission checking
     scaling extremely poorly as there are more unique users"""
-
+    version = time.time()
     with LazyItgs(logger_iden='runners/modlog.py#main') as itgs:
-        itgs.logger.print(Level.DEBUG, 'Successfully booted up')
+        itgs.logger.print(Level.DEBUG, 'Successfully booted up, version = {}', version)
 
     while True:
         with LazyItgs(logger_iden='runners/modlog.py#main') as itgs:
-            scan_for_modactions(itgs)
+            scan_for_modactions(itgs, version)
         time.sleep(3600)
 
 
-def scan_for_modactions(itgs: LazyItgs):
+def scan_for_modactions(itgs: LazyItgs, version: float):
     itgs.logger.print(Level.TRACE, 'Scanning for new moderator actions..')
     after = None
     last_seen = itgs.cache.get(MOST_RECENT_ACTION_SEEN_KEY)
@@ -46,7 +47,7 @@ def scan_for_modactions(itgs: LazyItgs):
     new_last_seen = last_seen
     finished = False
     while not finished:
-        actions, after = _fetch_actions(itgs, after)
+        actions, after = _fetch_actions(itgs, version, after)
         if after is None:
             finished = True
 
@@ -85,8 +86,7 @@ def handle_action(itgs, act):
             perms.manager.flush_cache(itgs, username)
 
 
-
-def _fetch_actions(itgs, after=None):
+def _fetch_actions(itgs, version, after=None):
     subreddits = os.environ['SUBREDDITS'].split(',')
 
     body = utils.reddit_proxy.send_request(
