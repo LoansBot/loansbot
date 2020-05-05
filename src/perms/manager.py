@@ -106,7 +106,7 @@ def fetch_info(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -> 
             'account_created_at': karma_and_age['info']['created_at_utc_seconds'],
             'borrow_approved_submitter': is_approved['info']['approved'],
             'borrow_moderator': is_moderator['info']['moderator'],
-            'borrow_banned': is_banned['info']['borrow_banned'],
+            'borrow_banned': is_banned['info']['banned'],
             'checked_karma_at': time.time()
         }
         doc.create_or_overwrite(ttl=60 * 60 * 24 * 365)
