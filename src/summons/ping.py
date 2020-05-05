@@ -7,6 +7,9 @@ import utils.reddit_proxy
 
 
 class PingSummon(Summon):
+    def __init__(self):
+        self.name = 'ping'
+
     def might_apply_to_comment(self, comment):
         """Determines if the $ping command is in the comment
 
