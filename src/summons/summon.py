@@ -18,7 +18,7 @@ class Summon:
         """
         raise NotImplementedError()
 
-    def handle_comment(self, itgs, comment):
+    def handle_comment(self, itgs, comment, rpiden, rpversion):
         """Handles the given comment. This is expected to have side-effects,
         such as saving things to the database, logging, and responding via
         reddit using the reddit proxy.
@@ -26,5 +26,7 @@ class Summon:
         :param itgs: The LazyIntegrations to use for connecting to other
             services
         :param comment: The comment that needs to be handled
+        :param rpiden: The identifier suffix to use with the reddit proxy
+        :param rpversion: The version to use with the reddit proxy
         """
         raise NotImplementedError()

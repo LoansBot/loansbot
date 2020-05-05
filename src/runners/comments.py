@@ -4,6 +4,8 @@ import os
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 import traceback
 import utils.reddit_proxy
+from perms import can_interact
+from summons.ping import PingSummon
 
 from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
@@ -12,7 +14,7 @@ from lbshared.signal_helper import delay_signals
 
 def main():
     """Periodically scans for new comments in relevant subreddits."""
-    summons = []
+    summons = [PingSummon()]
     version = time.time()
 
     with LazyIntegrations(logger_iden='runners/comments.py#main') as itgs:
@@ -28,6 +30,7 @@ def scan_for_comments(itgs, version, summons):
     """Scans for new comments using the given logger and amqp connection"""
     itgs.logger.print(Level.TRACE, 'Scanning for new comments..')
     after = None
+    rpiden = 'comments'
 
     handled_fullnames = Table('handled_fullnames')
 
@@ -60,19 +63,25 @@ def scan_for_comments(itgs, version, summons):
             itgs.logger.print(Level.TRACE, 'Checking comment {}', comment['fullname'])
 
             summon_to_use = None
-            for summon in summons:
-                if not summon.might_apply_to_comment(comment):
-                    continue
-                summon_to_use = summon
-                break
+            if can_interact(itgs, comment['author'], rpiden, version):
+                for summon in summons:
+                    if not summon.might_apply_to_comment(comment):
+                        continue
+                    summon_to_use = summon
+                    break
+            else:
+                itgs.logger.print(
+                    Level.INFO,
+                    'Using no summons for {} by {}; insufficient access',
+                    comment['fullname'], comment['author']
+                )
 
             num_to_find = num_to_find - 1
             with delay_signals(itgs):
                 if summon_to_use is not None:
-                    # TODO check author
                     itgs.logger.print(Level.DEBUG, 'Using summon {}', summon_to_use.name)
                     try:
-                        summon_to_use.handle_comment(itgs, comment)
+                        summon_to_use.handle_comment(itgs, comment, rpiden, version)
                     except:  # noqa
                         itgs.write_conn.rollback()
                         itgs.logger.exception(
