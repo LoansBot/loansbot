@@ -102,11 +102,11 @@ def fetch_info(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -> 
             {'subreddit': 'borrow', 'username': username}
         )
         doc.body = {
-            'karma': karma_and_age['data']['cumulative_karma'],
-            'account_created_at': karma_and_age['created_at_utc_seconds'],
-            'borrow_approved_submitter': is_approved['data']['approved'],
-            'borrow_moderator': is_moderator['data']['moderator'],
-            'borrow_banned': is_banned['data']['borrow_banned'],
+            'karma': karma_and_age['info']['cumulative_karma'],
+            'account_created_at': karma_and_age['info']['created_at_utc_seconds'],
+            'borrow_approved_submitter': is_approved['info']['approved'],
+            'borrow_moderator': is_moderator['info']['moderator'],
+            'borrow_banned': is_banned['info']['borrow_banned'],
             'checked_karma_at': time.time()
         }
         doc.create_or_overwrite(ttl=60 * 60 * 24 * 365)

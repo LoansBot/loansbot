@@ -22,7 +22,15 @@ def main():
 
     while True:
         with LazyIntegrations(no_read_only=True, logger_iden='runners/comments.py#main') as itgs:
-            scan_for_comments(itgs, version, summons)
+            try:
+                scan_for_comments(itgs, version, summons)
+            except:  # noqa
+                itgs.write_conn.rollback()
+                itgs.logger.exception(
+                    Level.ERROR,
+                    'Unhandled exception while handling comments'
+                )
+                traceback.print_exc()
         time.sleep(60)
 
 
