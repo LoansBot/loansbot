@@ -48,6 +48,12 @@ class Test(unittest.TestCase):
             [money.Money(123, 'CAD'), None]
         )
 
+    def test_convert(self):
+        self.assertEqual(
+            PARSER.parse('$loan 1.23 CAD AS JPY'),
+            [money.Money(123, 'CAD'), 'JPY']
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
