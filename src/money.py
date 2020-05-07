@@ -39,3 +39,10 @@ class Money:
             return f'{self.minor} {self.currency}'
         major = self.minor / (10 ** exp)
         return ('{:.' + str(exp) + 'f} {}').format(major, self.currency)
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, Money) and
+            other.minor == self.minor and
+            other.currency == self.currency
+        )
