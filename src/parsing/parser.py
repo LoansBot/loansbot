@@ -6,7 +6,7 @@ This parser is always greedy; it will attempt to parse optional tokens before
 moving on, and it will attempt to parse all fallbacks in order.
 """
 import pytypeutils as tus
-from parsing.token import Token
+from parsing.tokens import Token
 
 
 class Parser:
@@ -20,7 +20,7 @@ class Parser:
         tokens (list): A list of tokens, where each token is actually a dict
             containing the following keys:
 
-            token (parsing.token.Token): The underlying parsable token. This
+            token (parsing.tokens.Token): The underlying parsable token. This
                 may encapsulate multiple fallback tokens.
             optional (bool): Determines what should happen if this token isn't
                 matched at the expected point. If optional is true, the token
