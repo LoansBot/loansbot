@@ -60,7 +60,7 @@ def scan_for_comments(itgs, version, summons):
         )
         rows = itgs.read_cursor.fetchall()
 
-        itgs.logger.print(Level.TRACE, 'Found req{} new comments', len(fullnames) - len(rows))
+        itgs.logger.print(Level.TRACE, 'Found {} new comments', len(fullnames) - len(rows))
 
         if len(fullnames) == len(rows):
             break
