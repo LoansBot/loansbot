@@ -38,7 +38,6 @@ def create_money_token():
         if 'iso' in groups:
             iso = groups['iso']
         elif 'sym' in groups:
-            print(f"sym={groups['sym']}")
             iso = money.CURRENCY_SYMBOLS[groups['sym']]
         else:
             iso = 'USD'

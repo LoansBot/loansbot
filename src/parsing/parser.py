@@ -59,7 +59,7 @@ class Parser:
             token_index = start_index + len(self.anchor)
             result = []
             for token in self.tokens:
-                if token_index < len(self.anchor):
+                if token_index < len(text):
                     num_consumed, value = token['token'].consume(text, token_index)
                 else:
                     num_consumed, value = (None, None)
