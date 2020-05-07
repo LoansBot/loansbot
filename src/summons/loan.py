@@ -38,10 +38,11 @@ class LoanSummon(Summon):
             {
                 'parent': comment['fullname'],
                 'text': (
-                    'Detected that /u/{} wants to lend /u/{} {}{}',
-                    lender_username, borrower_username,
-                    token_vals[0],
-                    '' if token_vals[1] is None else f' but store it in {token_vals[1]}'
+                    'Detected that /u/{} wants to lend /u/{} {}{}'.format(
+                        lender_username, borrower_username,
+                        token_vals[0],
+                        '' if token_vals[1] is None else f' but store it in {token_vals[1]}'
+                    )
                 )
             }
         )
