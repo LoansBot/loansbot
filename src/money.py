@@ -33,9 +33,9 @@ class Money:
         self.minor = minor
         self.currency = currency
 
-    def __str__(self):
+    def __repr__(self):
         exp = ISO_CODES_TO_EXP[self.currency]
         if exp == 0:
             return f'{self.minor} {self.currency}'
         major = self.minor / (10 ** exp)
-        return ('{:.' + self.exp + 'f} {}').format(major, self.currency)
+        return ('{:.' + str(exp) + 'f} {}').format(major, self.currency)

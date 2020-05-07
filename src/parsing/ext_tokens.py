@@ -38,15 +38,16 @@ def create_money_token():
         if 'iso' in groups:
             iso = groups['iso']
         elif 'sym' in groups:
+            print(f"sym={groups['sym']}")
             iso = money.CURRENCY_SYMBOLS[groups['sym']]
         else:
             iso = 'USD'
 
         exp = money.ISO_CODES_TO_EXP[iso]
         new_amount_regex = (
-            '[0-9]+' if exp == 0 else r'[0-9]+(?:\.[0-9]{' + str(exp) + r'})'
+            r'\A[0-9]+\Z' if exp == 0 else r'\A[0-9]+(?:\.[0-9]{' + str(exp) + r'})?\Z'
         )
-        if not re.match(groups['amt'], new_amount_regex):
+        if not re.match(new_amount_regex, groups['amt']):
             return None
 
         # We manipulate the number as a string as it avoids floating point
@@ -56,7 +57,7 @@ def create_money_token():
         return money.Money(int(groups['amt'] + ''.join(['0'] * exp)), iso)
 
     iso_codes = '|'.join(money.ISO_CODES_TO_EXP.keys())
-    symbols = '|'.join(money.CURRENCY_SYMBOLS.keys())
+    symbols = '|'.join([k if k != '$' else r'\$' for k in money.CURRENCY_SYMBOLS.keys()])
     amount = r'[0-9]+(?:\.[0-9]{0,4})?'
     return tkns.TransformedToken(
         tkns.FallbackToken([
