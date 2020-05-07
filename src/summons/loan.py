@@ -3,7 +3,6 @@ thread author.
 """
 from .summon import Summon
 from parsing.parser import Parser
-import parsing.tokens
 import parsing.ext_tokens
 import utils.reddit_proxy
 
