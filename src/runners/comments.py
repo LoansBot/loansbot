@@ -6,6 +6,7 @@ import traceback
 import utils.reddit_proxy
 from perms import can_interact
 from summons.ping import PingSummon
+from summons.loan import LoanSummon
 
 from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
@@ -14,7 +15,7 @@ from lbshared.signal_helper import delay_signals
 
 def main():
     """Periodically scans for new comments in relevant subreddits."""
-    summons = [PingSummon()]
+    summons = [PingSummon(), LoanSummon()]
     version = time.time()
 
     with LazyIntegrations(logger_iden='runners/comments.py#main') as itgs:
@@ -59,7 +60,7 @@ def scan_for_comments(itgs, version, summons):
         )
         rows = itgs.read_cursor.fetchall()
 
-        itgs.logger.print(Level.TRACE, 'Found {} new comments', len(fullnames) - len(rows))
+        itgs.logger.print(Level.TRACE, 'Found req{} new comments', len(fullnames) - len(rows))
 
         if len(fullnames) == len(rows):
             break
