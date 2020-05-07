@@ -1,0 +1,41 @@
+"""Describes simple DTO's for manipulating money amounts"""
+import pytypeutils as tus
+
+# We prefer peope use iso4217 codes, but these are some common
+# non-contentious currency symbols for our audience, and even these are
+# ambiguous
+CURRENCY_SYMBOLS = {
+    '$': 'USD',
+    '€': 'EUR',
+    '£': 'GBP'
+}
+
+ISO_CODES_TO_EXP = {
+    'AUD': 2,
+    'GBP': 2,
+    'EUR': 2,
+    'CAD': 2,
+    'JPY': 0,
+    'MXN': 2,
+    'USD': 2
+}
+
+
+class Money:
+    """Describes a monetary amount in the most granular unit of a given
+    currency
+
+    minor (int): The number of minor currency units
+    currency (str): The uppercased ISO4217 currency code
+    """
+    def __init__(self, minor, currency):
+        tus.check(minor=(minor, int), currency=(currency, str))
+        self.minor = minor
+        self.currency = currency
+
+    def __str__(self):
+        exp = ISO_CODES_TO_EXP[self.currency]
+        if exp == 0:
+            return f'{self.minor} {self.currency}'
+        major = self.minor / (10 ** exp)
+        return ('{:.' + self.exp + 'f} {}').format(major, self.currency)
