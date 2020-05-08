@@ -3,7 +3,6 @@ import unittest
 import helper  # noqa
 from parsing.parser import Parser
 import parsing.ext_tokens
-import money
 
 try:
     from summons.unpaid import PARSER
