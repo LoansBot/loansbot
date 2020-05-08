@@ -5,8 +5,13 @@ from pypika import PostgreSQLQuery as Query, Table, Parameter
 import traceback
 import utils.reddit_proxy
 from perms import can_interact
-from summons.ping import PingSummon
+from summons.check import CheckSummon
+from summons.confirm import ConfirmSummon
 from summons.loan import LoanSummon
+from summons.paid_with_id import PaidWithIdSummon
+from summons.paid import PaidSummon
+from summons.ping import PingSummon
+from summons.unpaid import UnpaidSummon
 
 from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
@@ -15,7 +20,10 @@ from lbshared.signal_helper import delay_signals
 
 def main():
     """Periodically scans for new comments in relevant subreddits."""
-    summons = [PingSummon(), LoanSummon()]
+    summons = [
+        CheckSummon(), ConfirmSummon(), LoanSummon(), PaidWithIdSummon(),
+        PaidSummon(), PingSummon(), UnpaidSummon()
+    ]
     version = time.time()
 
     with LazyIntegrations(logger_iden='runners/comments.py#main') as itgs:
