@@ -85,3 +85,11 @@ def as_currency_token():
     iso_codes = '|'.join(money.ISO_CODES_TO_EXP.keys())
 
     return tkns.RegexToken(r'\A\s*[aA][sS]\s+(' + iso_codes + r')\s*', 1)
+
+
+def create_uint_token():
+    """Creates a token for identifying a nonnegative int."""
+    return tkns.TransformedToken(
+        tkns.RegexToken(r'\A\s*([0-9]+)\s*', 1),
+        int
+    )
