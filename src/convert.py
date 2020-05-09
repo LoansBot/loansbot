@@ -17,7 +17,7 @@ import money
 
 
 MEMCACHED_KEY_PREFIX = 'loansbot/convert'
-MEMCACHED_EXPIRE_TIME_SECONDS = int(os.environ.get('CURRENCY_LAYER_CACHE_TIME'), '14400')
+MEMCACHED_EXPIRE_TIME_SECONDS = int(os.environ.get('CURRENCY_LAYER_CACHE_TIME', '14400'))
 
 
 def convert(itgs, source, target):
