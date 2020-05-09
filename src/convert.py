@@ -81,7 +81,7 @@ def fill_cache(itgs, source):
                 'https://apilayer.net/api/live',
                 params={
                     'access_key': api_key,
-                    'currencies': list(money.ISO_CODES_TO_EXP.keys()),
+                    'currencies': ','.join(money.ISO_CODES_TO_EXP.keys()),
                     'source': source,
                     'format': 1
                 }
