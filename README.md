@@ -94,6 +94,10 @@ Supported commands:
 - `KARMA_MIN`: The minimum amount of karma to interact with the loansbot
 - `ACCOUNT_AGE_SECONDS_MIN`: The minimum account age in fractional seconds to
   interact with the loansbot
+- `CURRENCY_LAYER_API_KEY`: The API access key to communicate with currency
+  layer. Must be a paid plan so we can use source currency switching.
+- `CURRENCY_LAYER_CACHE_TIME`: How long we cache currency layer results for in
+  seconds; defaults to 4 hours.
 
 ## Repayments
 

@@ -5,6 +5,9 @@ from .summon import Summon
 from parsing.parser import Parser
 import parsing.ext_tokens
 import utils.reddit_proxy
+import convert
+import money
+import time
 
 
 PARSER = Parser(
@@ -29,19 +32,45 @@ class LoanSummon(Summon):
         return PARSER.parse(comment['body']) is not None
 
     def handle_comment(self, itgs, comment, rpiden, rpversion):
+        start_at = time.time()
         token_vals = PARSER.parse(comment['body'])
         borrower_username = comment['link_author']
         lender_username = comment['author']
+        amount = token_vals[0]
+        store_currency = token_vals[1] or amount.currency
 
+        if amount.currency == store_currency:
+            store_amount = amount
+            rate = 1
+        else:
+            rate = convert.convert(itgs, amount.currency, store_currency)
+            store_amount = money.Money(int(amount.minor * rate), store_currency)
+
+        if store_currency == 'USD':
+            usd_amount = store_amount
+            usd_rate = 1
+        else:
+            # Where possible we want the source to be consistent rather than
+            # the target as it allows us to reuse requests
+            usd_rate = 1 / convert.convert(itgs, 'USD', store_currency)
+            usd_amount = money.Money(int(store_amount.minor * usd_rate), 'USD')
+
+        processing_time = time.time() - start_at
         utils.reddit_proxy.send_request(
             itgs, rpiden, rpversion, 'post_comment',
             {
                 'parent': comment['fullname'],
                 'text': (
-                    'Detected that /u/{} wants to lend /u/{} {}{}'.format(
-                        lender_username, borrower_username,
-                        token_vals[0],
-                        '' if token_vals[1] is None else f' but store it in {token_vals[1]}'
+                    (
+                        'Detected that /u/{} wants to lend /u/{} {}{}. ' +
+                        'The stored amount is {} (rate used: {}) and the USD ' +
+                        'reference amount is {} (rate used: {}). It took ' +
+                        '{:.3f} seconds to perform summon processing on this ' +
+                        'request.'
+                    ).format(
+                        lender_username, borrower_username, amount,
+                        '' if store_currency is None else f' but store it in {store_currency}',
+                        store_amount, rate, usd_amount, usd_rate, processing_time
                     )
                 )
             }
