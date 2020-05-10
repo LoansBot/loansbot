@@ -15,6 +15,11 @@ KARMA_MIN = int(os.environ['KARMA_MIN'])
 ACCOUNT_AGE_SECONDS_MIN = float(os.environ['ACCOUNT_AGE_SECONDS_MIN'])
 """The minimum account age to interact"""
 
+IGNORED_USERS = frozenset(
+    s.lower() for s in os.environ.get('IGNORED_USERS', 'LoansBot').split(',')
+)
+"""The users we don't allow to interact, perhaps because they are us!"""
+
 
 def can_interact(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -> bool:
     """Determines if the user with the given username has permission to
@@ -27,7 +32,8 @@ def can_interact(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -
         rpiden (str): The identifier to use when using the reddit proxy.
         rpversion (float): The versino number to use when using the reddit proxy
     """
-
+    if username.lower() in IGNORED_USERS:
+        return False
     info = fetch_info(itgs, username, rpiden, rpversion)
     if info is None:
         return False

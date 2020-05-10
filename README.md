@@ -98,6 +98,8 @@ Supported commands:
   layer. Must be a paid plan so we can use source currency switching.
 - `CURRENCY_LAYER_CACHE_TIME`: How long we cache currency layer results for in
   seconds; defaults to 4 hours.
+- `IGNORED_USERS`: Comma separated list of usernames to ignore, should include
+  the username we show up as (e.g., LoansBot)
 
 ## Repayments
 

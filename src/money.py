@@ -33,12 +33,18 @@ class Money:
         self.minor = minor
         self.currency = currency
 
-    def __repr__(self):
+    def major_str(self):
+        """Format the amount in the major currency. So e.g. 100 minor USD
+        becomes $1.00
+        """
         exp = ISO_CODES_TO_EXP[self.currency]
         if exp == 0:
-            return f'{self.minor} {self.currency}'
+            return str(self.minor)
         major = self.minor / (10 ** exp)
-        return ('{:.' + str(exp) + 'f} {}').format(major, self.currency)
+        return ('{:.' + str(exp) + 'f}').format(major)
+
+    def __repr__(self):
+        return '{} {}'.format(self.major_str(), self.currency)
 
     def __eq__(self, other):
         return (
