@@ -8,6 +8,7 @@ import utils.reddit_proxy
 import convert
 import money
 import time
+from datetime import datetime
 import query_helper
 from lbshared.responses import get_response
 from pypika import Query, Table, Parameter
@@ -163,6 +164,7 @@ class LoanSummon(Summon):
                 loans.borrower_id,
                 loans.principal_id,
                 loans.principal_repayment_id,
+                loans.created_at,
                 loans.repaid_at,
                 loans.unpaid_at,
                 loans.deleted_at
@@ -174,6 +176,7 @@ class LoanSummon(Summon):
                 borrower_user_id,
                 principal_id,
                 principal_repayment_id,
+                datetime.fromtimestamp(comment['created_utc']),
                 None,
                 None,
                 None
@@ -182,9 +185,8 @@ class LoanSummon(Summon):
         (loan_id,) = itgs.write_cursor.fetchone()
         itgs.write_conn.commit()
 
-        pretty_store_amount = (
-            '{symbol}{major}' if db_currency_sym_on_left else '{major}{symbol}'
-        ).format(symbol=db_currency_symbol, major=store_amount.major_str())
+        store_amount.symbol = db_currency_symbol
+        store_amount.symbol_on_left = db_currency_sym_on_left
 
         processing_time = time.time() - start_at
         (formatted_response,) = get_response(
@@ -192,8 +194,8 @@ class LoanSummon(Summon):
             'successful_loan',
             lender_username=lender_username,
             borrower_username=borrower_username,
-            principal=pretty_store_amount,
-            principal_explicit=store_amount,
+            principal=str(store_amount),
+            principal_explicit=repr(store_amount),
             loan_id=loan_id,
             processing_time=processing_time
         )
