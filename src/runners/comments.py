@@ -67,6 +67,7 @@ def scan_for_comments(itgs, version, summons):
             fullnames
         )
         rows = itgs.read_cursor.fetchall()
+        itgs.read_cursor.commit()
 
         itgs.logger.print(Level.TRACE, 'Found {} new comments', len(fullnames) - len(rows))
 
@@ -99,7 +100,11 @@ def scan_for_comments(itgs, version, summons):
                     itgs.logger.print(Level.DEBUG, 'Using summon {}', summon_to_use.name)
                     try:
                         summon_to_use.handle_comment(itgs, comment, rpiden, version)
+
+                        itgs.read_conn.commit()
+                        itgs.write_conn.commit()
                     except:  # noqa
+                        itgs.read_conn.rollback()
                         itgs.write_conn.rollback()
                         itgs.logger.exception(
                             Level.WARN,
@@ -107,8 +112,6 @@ def scan_for_comments(itgs, version, summons):
                             summon_to_use.name, comment
                         )
                         traceback.print_exc()
-
-                    itgs.write_conn.commit()
 
                 itgs.write_cursor.execute(
                     Query.into(handled_fullnames)

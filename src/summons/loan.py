@@ -63,6 +63,7 @@ class LoanSummon(Summon):
         currencies = Table('currencies')
         moneys = Table('moneys')
         loans = Table('loans')
+        loan_creation_infos = Table('loan_creation_infos')
         (lender_user_id,) = query_helper.find_or_create_or_find(
             itgs,
             (
@@ -183,6 +184,26 @@ class LoanSummon(Summon):
             )
         )
         (loan_id,) = itgs.write_cursor.fetchone()
+
+        itgs.write_cursor.execute(
+            Query.into(loan_creation_infos)
+            .columns(
+                loan_creation_infos.loan_id,
+                loan_creation_infos.type,
+                loan_creation_infos.parent_fullname,
+                loan_creation_infos.comment_fullname,
+                loan_creation_infos.mod_user_id
+            )
+            .values(*[Parameter('%s') for _ in range(5)])
+            .get_sql(),
+            (
+                loan_id,
+                0,
+                comment['link_fullname'],
+                comment['fullname'],
+                None
+            )
+        )
         itgs.write_conn.commit()
 
         store_amount.symbol = db_currency_symbol

@@ -4,7 +4,10 @@ from pydantic import BaseModel
 from typing import Optional, List
 import pytypeutils as tus
 from money import Money
-from datetime import datetime, timezone
+from datetime import datetime
+from pypika import Query, Table, Parameter, Order
+from pypika.functions import Count, Sum, Star
+from lbshared.lazy_integrations import LazyIntegrations
 
 
 class Loan(BaseModel):
@@ -48,7 +51,8 @@ def format_loan_table(loans: List[Loan]):
     tus.check_listlike(loans=(loans, Loan))
 
     result_lines = [
-        'Lender|Borrower|Amount Given|Amount Repaid|Unpaid?|Original Thread|Date Given|Date Paid Back',
+        'Lender|Borrower|Amount Given|Amount Repaid|Unpaid?|Original Thread'
+        + '|Date Given|Date Paid Back',
         ':--|:--|:--|:--|:--|:--|:--|:--'
     ]
     line_fmt = '|'.join('{' + a + '}' for a in (
@@ -57,6 +61,7 @@ def format_loan_table(loans: List[Loan]):
     ))
     for loan in loans:
         loan_dict = loan.dict().copy()
+        loan_dict['permalink'] = loan_dict.get('permalink', '')
         loan_dict['unpaid_bool'] = '***UNPAID***' if loan.unpaid_at is not None else ''
         loan_dict['created_at_pretty'] = loan.created_at.strftime('%b %d, %Y')
         loan_dict['repaid_at_pretty'] = (
@@ -135,22 +140,21 @@ def format_loan_summary(username: str, counts: dict, shown: dict):
         tus.check(**{f'shown_{key}': (loans, (tuple, list))})
         tus.check_listlike(**{f'shown_{key}': (loans, Loan)})
 
-    result_lines = [
-        '/u/{} has taken out and paid back {} loan{}, for a total of {}'.format(
-            username,
-            counts['paid_as_borrower']['number_of_loans'],
-            's' if counts['paid_as_borrower']['number_of_loans'] != 1 else '',
-            counts['paid_as_borrower']['principal_of_loans']
-        ),
-        '/u/{} has given out and gotten returned {} loan{}, for a total of {}'.format(
-            username,
-            counts['paid_as_lender']['number_of_loans'],
-            's' if counts['paid_as_lender']['number_of_loans'] != 1 else '',
-            counts['paid_as_lender']['principal_of_loans']
-        )
-    ]
+    result_lines = []
 
     blocks = (
+        (
+            'paid_as_borrower',
+            '/u/{} has not taken and completely paid back any loans.',
+            'Loans paid back with /u/{} as borrower',
+            'paid as a borrower'
+        ),
+        (
+            'paid_as_lender',
+            '/u/{} has not given out and had completely paid back any loans.',
+            'Loans paid back with /u/{} as lender',
+            'paid as a lender'
+        ),
         (
             'unpaid_as_borrower',
             '/u/{} has not received any loans which are currently marked unpaid',
@@ -200,7 +204,7 @@ def format_loan_summary(username: str, counts: dict, shown: dict):
             result_lines.append(format_loan_table(shown[key]))
         else:
             result_lines.append(
-                '/u/{} has **{} loan{} {}**, for a total of {}'.format(
+                '/u/{} has {} loan{} {}, for a total of {}'.format(
                     username,
                     counts[key]['number_of_loans'],
                     's' if counts[key]['number_of_loans'] != 1 else '',
@@ -210,3 +214,403 @@ def format_loan_summary(username: str, counts: dict, shown: dict):
             )
 
     return '\n\n'.join(result_lines)
+
+
+def get_all_loans(itgs: LazyIntegrations, username: str):
+    """Gets the list of all loans for the given username.
+
+    Example:
+        print(format_loan_table(get_all_loans(itgs, username)))
+
+    Arguments:
+        username (str): The username of the user to get the loans involving.
+            A loan involves a user if they are the lender or the borrower.
+
+    Returns:
+        loans (List[Loan]): All the loans involving the user with the given
+            username.
+    """
+    loans = Table('loans')
+    lenders = Table('lenders')
+    borrowers = Table('borrowers')
+
+    itgs.read_cursor.execute(
+        create_loans_query()
+        .where(
+            lenders.username == Parameter('%s')
+            | borrowers.username == Parameter('%s')
+        )
+        .orderby(loans.created_at, order=Order.desc)
+        .get_sql(),
+        (username, username)
+    )
+    result = []
+
+    row = itgs.read_cursor.fetchone()
+    while row is not None:
+        result.append(fetch_loan(row))
+        row = itgs.read_cursor.fetchone()
+
+    return result
+
+
+def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table: int = 7):
+    """Get all of the information for a loan summary for the given username in
+    a reasonably performant way.
+
+    Example:
+        print(format_loan_summary(*get_summary_info(itgs, username)))
+
+    Arguments:
+        itgs (LazyIntegrations): The integrations to use
+        username (str): The username to fetch summary information for.
+        max_loans_per_table (int): For the sections which we prefer to expand
+            the loans for, this is the maximum number of loans we're willing to
+            include in the table. If this is too large the table can become
+            very difficult to read on some mobile clients, and if this is way
+            too large we risk hitting the 5000 character limit.
+
+    Returns:
+        (str, dict, dict) The username, counts, and shown as described as the
+        arguments to format_loan_summary
+    """
+    loans = Table('loans')
+    moneys = Table('moneys')
+    principals = moneys.as_('principals')
+    users = Table('users')
+    lenders = users.as_('lenders')
+    borrowers = users.as_('borrowers')
+
+    now = datetime.utcnow()
+    oldest_loans_in_table = datetime(now.year - 1, now.month, now.day)
+
+    counts = {}
+    shown = {}
+
+    itgs.read_cursor.execute(
+        Query.from_(loans)
+        .select(Count(Star()), Sum(principals.amount_usd_cents))
+        .join(lenders).on(lenders.id == loans.lender_id)
+        .join(principals).on(principals.id == loans.principal_id)
+        .where(lenders.username == Parameter('%s'))
+        .where(loans.repaid_at.notnone())
+        .where(loans.deleted_at.isnone())
+        .get_sql(),
+        (username,)
+    )
+    (num_loans, princ_loans) = itgs.read_cursor.fetchone()
+    counts['paid_as_lender'] = {'number_of_loans': num_loans, 'principal_of_loans': princ_loans}
+    shown['paid_as_lender'] = []
+
+    itgs.read_cursor.execute(
+        Query.from_(loans)
+        .select(Count(Star()), Sum(principals.amount_usd_cents))
+        .join(borrowers).on(borrowers.id == loans.borrower_id)
+        .join(principals).on(principals.id == loans.principal_id)
+        .where(borrowers.username == Parameter('%s'))
+        .where(loans.repaid_at.notnone())
+        .where(loans.deleted_at.isnone())
+        .get_sql(),
+        (username,)
+    )
+    (num_loans, princ_loans) = itgs.read_cursor.fetchone()
+    counts['paid_as_borrower'] = {
+        'number_of_loans': num_loans,
+        'principal_of_loans': princ_loans
+    }
+    shown['paid_as_borrower'] = []
+
+    itgs.read_cursor.execute(
+        Query.from_(loans)
+        .select(Count(Star()), Sum(principals.amount_usd_cents))
+        .join(lenders).on(lenders.id == loans.lender_id)
+        .join(principals).on(principals.id == loans.principal_id)
+        .where(lenders.username == Parameter('%s'))
+        .where(loans.unpaid_at.notnone())
+        .where(loans.deleted_at.isnone())
+        .get_sql(),
+        (username,)
+    )
+    (num_loans, princ_loans) = itgs.read_cursor.fetchone()
+    counts['unpaid_as_lender'] = {
+        'number_of_loans': num_loans,
+        'principal_of_loans': princ_loans
+    }
+    shown['unpaid_as_lender'] = []
+
+    if num_loans > 0:
+        itgs.read_cursor.execute(
+            create_loans_query()
+            .where(lenders.username == Parameter('%s'))
+            .where(loans.unpaid_at.notnone())
+            .where(loans.created_at > Parameter('%s'))
+            .orderby(loans.created_at, order=Order.desc)
+            .limit(max_loans_per_table)
+            .get_sql(),
+            (username, oldest_loans_in_table)
+        )
+        row = itgs.read_cursor.fetchone()
+        while row is not None:
+            shown['unpaid_as_lender'].append(fetch_loan(row))
+            row = itgs.read_cursor.fetchone()
+
+    itgs.read_cursor.execute(
+        Query.from_(loans)
+        .select(Count(Star()), Sum(principals.amount_usd_cents))
+        .join(borrowers).on(borrowers.id == loans.borrower_id)
+        .join(principals).on(principals.id == loans.principal_id)
+        .where(borrowers.username == Parameter('%s'))
+        .where(loans.unpaid_at.notnone())
+        .where(loans.deleted_at.isnone())
+        .get_sql(),
+        (username,)
+    )
+    (num_loans, princ_loans) = itgs.read_cursor.fetchone()
+    counts['unpaid_as_borrower'] = {
+        'number_of_loans': num_loans,
+        'principal_of_loans': princ_loans
+    }
+    shown['unpaid_as_borrower'] = []
+
+    if num_loans > 0:
+        itgs.read_cursor.execute(
+            create_loans_query()
+            .where(borrowers.username == Parameter('%s'))
+            .where(loans.unpaid_at.notnone())
+            .where(loans.created_at > Parameter('%s'))
+            .orderby(loans.created_at, order=Order.desc)
+            .limit(max_loans_per_table)
+            .get_sql(),
+            (username, oldest_loans_in_table)
+        )
+        row = itgs.read_cursor.fetchone()
+        while row is not None:
+            shown['unpaid_as_borrower'].append(fetch_loan(row))
+            row = itgs.read_cursor.fetchone()
+
+    itgs.read_cursor.execute(
+        Query.from_(loans)
+        .select(Count(Star()), Sum(principals.amount_usd_cents))
+        .join(lenders).on(lenders.id == loans.lender_id)
+        .join(principals).on(principals.id == loans.principal_id)
+        .where(lenders.username == Parameter('%s'))
+        .where(loans.unpaid_at.isnone())
+        .where(loans.repaid_at.isnone())
+        .where(loans.deleted_at.isnone())
+        .get_sql(),
+        (username,)
+    )
+    (num_loans, princ_loans) = itgs.read_cursor.fetchone()
+    counts['inprogress_as_lender'] = {
+        'number_of_loans': num_loans,
+        'principal_of_loans': princ_loans
+    }
+    shown['inprogress_as_lender'] = []
+
+    if num_loans > 0:
+        itgs.read_cursor.execute(
+            create_loans_query()
+            .where(lenders.username == Parameter('%s'))
+            .where(loans.unpaid_at.isnone())
+            .where(loans.repaid_at.isnone())
+            .where(loans.created_at > Parameter('%s'))
+            .orderby(loans.created_at, order=Order.desc)
+            .limit(max_loans_per_table)
+            .get_sql(),
+            (username, oldest_loans_in_table)
+        )
+        row = itgs.read_cursor.fetchone()
+        while row is not None:
+            shown['inprogress_as_lender'].append(fetch_loan(row))
+            row = itgs.read_cursor.fetchone()
+
+    itgs.read_cursor.execute(
+        Query.from_(loans)
+        .select(Count(Star()), Sum(principals.amount_usd_cents))
+        .join(borrowers).on(borrowers.id == loans.borrower_id)
+        .join(principals).on(principals.id == loans.principal_id)
+        .where(borrowers.username == Parameter('%s'))
+        .where(loans.unpaid_at.isnone())
+        .where(loans.repaid_at.isnone())
+        .where(loans.deleted_at.isnone())
+        .get_sql(),
+        (username,)
+    )
+    (num_loans, princ_loans) = itgs.read_cursor.fetchone()
+    counts['inprogress_as_borrower'] = {
+        'number_of_loans': num_loans,
+        'principal_of_loans': princ_loans
+    }
+    shown['inprogress_as_borrower'] = []
+
+    if num_loans > 0:
+        itgs.read_cursor.execute(
+            create_loans_query()
+            .where(borrowers.username == Parameter('%s'))
+            .where(loans.unpaid_at.isnone())
+            .where(loans.repaid_at.isnone())
+            .where(loans.created_at > Parameter('%s'))
+            .orderby(loans.created_at, order=Order.desc)
+            .limit(max_loans_per_table)
+            .get_sql(),
+            (username, oldest_loans_in_table)
+        )
+        row = itgs.read_cursor.fetchone()
+        while row is not None:
+            shown['inprogress_as_borrower'].append(fetch_loan(row))
+            row = itgs.read_cursor.fetchone()
+
+    return (username, counts, shown)
+
+
+def get_and_format_all_or_summary(itgs: LazyIntegrations, username: str, threshold: int = 5):
+    """Checks how many loans the given user has. If it's at or above the
+    threshold, this fetches the summary info on the user and formats it,
+    then returns the formatted summary. If it's below the threshold,
+    fetches all the loans for that user, formats it into a table, and returns
+    the formatted table.
+
+    Arguments:
+        itgs (LazyIntegrations): The integrations to use for getting info
+        username (str): The username to check
+        threshold (int): The number of loans required for a summary instead of
+            just all the loans in a table
+
+    Returns:
+        (str): A markdown representation of the users loans
+    """
+    loans = Table('loans')
+    users = Table('users')
+    lenders = users.as_('lenders')
+    borrowers = users.as_('borrowers')
+
+    itgs.read_cursor.execute(
+        Query.from_(loans).select(Count(Star()))
+        .join(lenders).on(lenders.id == loans.lender_id)
+        .join(borrowers).on(borrowers.id == loans.borrower_id)
+        .where(
+            lenders.username == Parameter('%s')
+            | borrowers.username == Parameter('%s')
+        )
+        .where(loans.deleted_at.isnone())
+        .get_sql(),
+        (username, username)
+    )
+    (cnt,) = itgs.read_cursor.fetchone()
+    if cnt < threshold:
+        return format_loan_table(get_all_loans(itgs, username))
+    return format_loan_summary(*get_summary_info(itgs, username))
+
+
+def create_loans_query():
+    """Create a query which will convert every loan into a single row which can
+    be converted to a Loan object using fetch_loan.
+
+    Returns:
+        (Query): A query object which is unordered and not limited with no
+            restriction on which loans are included (except excluding deleted),
+            but will return one row per loan which can be interpreted with
+            fetch_loan.
+    """
+    loans = Table('loans')
+    users = Table('users')
+    moneys = Table('moneys')
+    currencies = Table('currencies')
+    loan_creation_infos = Table('loan_creation_infos')
+
+    lenders = users.as_('lenders')
+    borrowers = users.as_('borrowers')
+    principals = moneys.as_('principals')
+    principal_currencies = currencies.as_('principal_currencies')
+    principal_repayments = moneys.as_('principal_repayments')
+    principal_repayment_currencies = currencies.as_('principal_repayment_currencies')
+
+    return (
+        Query.from_(loans)
+        .select(
+            lenders.username,
+            borrowers.username,
+            principals.amount,
+            principal_currencies.code,
+            principal_currencies.symbol,
+            principal_currencies.symbol_on_left,
+            principal_currencies.exponent,
+            principal_repayments.amount,
+            principal_repayment_currencies.code,
+            principal_repayment_currencies.symbol,
+            principal_repayment_currencies.symbol_on_left,
+            principal_repayment_currencies.exponent,
+            loan_creation_infos.type,
+            loan_creation_infos.parent_fullname,
+            loan_creation_infos.comment_fullname,
+            loans.created_at,
+            loans.repaid_at,
+            loans.unpaid_at
+        )
+        .join(lenders).on(lenders.id == loans.lender_id)
+        .join(borrowers).on(borrowers.id == loans.borrower_id)
+        .join(principals).on(principals.id == loans.principal_id)
+        .join(principal_currencies).on(principal_currencies.id == principals.currency_id)
+        .join(principal_repayments).on(principal_repayments.id == loans.principal_repayment_id)
+        .join(principal_repayment_currencies)
+        .on(principal_repayment_currencies.id == principal_repayments.currency_id)
+        .left_join(loan_creation_infos).on(loan_creation_infos.loan_id == loans.id)
+        .where(loans.deleted_at.isnone())
+    )
+
+
+def fetch_loan(row):
+    """Converts a row result from create_loans_query into a Loan object.
+
+    Arguments:
+        row (tuple): The row returned from postgres
+
+    Returns:
+        (Loan) The loan object
+    """
+    (
+        lender_username,
+        borrower_username,
+        principal_amount,
+        principal_code,
+        principal_symbol,
+        principal_symbol_on_left,
+        principal_exp,
+        principal_repayment_amount,
+        principal_repayment_code,
+        principal_repayment_symbol,
+        principal_repayment_symbol_on_left,
+        principal_repayment_exp,
+        creation_type,
+        creation_parent_fullname,
+        creation_comment_fullname,
+        created_at,
+        repaid_at,
+        unpaid_at
+    ) = row
+
+    permalink = None
+    if creation_type == 0:
+        permalink = 'https://reddit.com/comments/{}/redditloans/{}'.format(
+            creation_parent_fullname[3:],
+            creation_comment_fullname[3:]
+        )
+
+    return Loan(
+        lender=lender_username,
+        borrower=borrower_username,
+        principal=Money(
+            principal_amount, principal_code,
+            exp=principal_exp, symbol=principal_symbol,
+            symbol_on_left=principal_symbol_on_left
+        ),
+        principal_repayment=Money(
+            principal_repayment_amount, principal_repayment_code,
+            exp=principal_repayment_exp, symbol=principal_repayment_symbol,
+            symbol_on_left=principal_symbol_on_left
+        ),
+        permalink=permalink,
+        created_at=created_at,
+        repaid_at=repaid_at,
+        unpaid_at=unpaid_at
+    )
