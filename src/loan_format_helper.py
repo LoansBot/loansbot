@@ -237,8 +237,8 @@ def get_all_loans(itgs: LazyIntegrations, username: str):
     itgs.read_cursor.execute(
         create_loans_query()
         .where(
-            lenders.username == Parameter('%s')
-            | borrowers.username == Parameter('%s')
+            (lenders.username == Parameter('%s'))
+            | (borrowers.username == Parameter('%s'))
         )
         .orderby(loans.created_at, order=Order.desc)
         .get_sql(),
@@ -489,8 +489,8 @@ def get_and_format_all_or_summary(itgs: LazyIntegrations, username: str, thresho
         .join(lenders).on(lenders.id == loans.lender_id)
         .join(borrowers).on(borrowers.id == loans.borrower_id)
         .where(
-            lenders.username == Parameter('%s')
-            | borrowers.username == Parameter('%s')
+            (lenders.username == Parameter('%s'))
+            | (borrowers.username == Parameter('%s'))
         )
         .where(loans.deleted_at.isnone())
         .get_sql(),
