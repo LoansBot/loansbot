@@ -148,7 +148,7 @@ class LoanSummon(Summon):
         itgs.write_cursor.execute(
             Query.into(moneys)
             .columns(moneys.currency_id, moneys.amount, moneys.amount_usd_cents)
-            .insert(*[Parameter('%s') for _ in range(4)])
+            .insert(*[Parameter('%s') for _ in range(3)])
             .returning(moneys.id)
             .get_sql(),
             (
@@ -169,7 +169,7 @@ class LoanSummon(Summon):
                 loans.repaid_at,
                 loans.unpaid_at,
                 loans.deleted_at
-            ).insert(*[Parameter('%s') for _ in range(7)])
+            ).insert(*[Parameter('%s') for _ in range(8)])
             .returning(loans.id)
             .get_sql(),
             (
