@@ -76,7 +76,7 @@ class LoanSummon(Summon):
             (
                 Query.into(users)
                 .columns(users.username)
-                .values(Parameter('%s'))
+                .insert(Parameter('%s'))
                 .returning(users.id)
                 .get_sql(),
                 (lender_username.lower(),)
@@ -94,7 +94,7 @@ class LoanSummon(Summon):
             (
                 Query.into(users)
                 .columns(users.username)
-                .values(Parameter('%s'))
+                .insert(Parameter('%s'))
                 .returning(users.id)
                 .get_sql(),
                 (borrower_username.lower(),)
@@ -169,7 +169,7 @@ class LoanSummon(Summon):
                 loans.repaid_at,
                 loans.unpaid_at,
                 loans.deleted_at
-            ).values(*[Parameter('%s') for _ in range(7)])
+            ).insert(*[Parameter('%s') for _ in range(7)])
             .returning(loans.id)
             .get_sql(),
             (
@@ -194,7 +194,7 @@ class LoanSummon(Summon):
                 loan_creation_infos.comment_fullname,
                 loan_creation_infos.mod_user_id
             )
-            .values(*[Parameter('%s') for _ in range(5)])
+            .insert(*[Parameter('%s') for _ in range(5)])
             .get_sql(),
             (
                 loan_id,
