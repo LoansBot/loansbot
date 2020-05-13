@@ -67,7 +67,7 @@ def scan_for_comments(itgs, version, summons):
             fullnames
         )
         rows = itgs.read_cursor.fetchall()
-        itgs.read_cursor.commit()
+        itgs.read_conn.commit()
 
         itgs.logger.print(Level.TRACE, 'Found {} new comments', len(fullnames) - len(rows))
 
