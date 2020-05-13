@@ -6,6 +6,7 @@ from parsing.parser import Parser
 import parsing.ext_tokens
 import utils.reddit_proxy
 import loan_format_helper
+from lbshared.responses import get_response
 
 
 PARSER = Parser(
