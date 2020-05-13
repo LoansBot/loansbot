@@ -293,8 +293,8 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .join(lenders).on(lenders.id == loans.lender_id)
         .join(principals).on(principals.id == loans.principal_id)
         .where(lenders.username == Parameter('%s'))
-        .where(loans.repaid_at.notnone())
-        .where(loans.deleted_at.isnone())
+        .where(loans.repaid_at.notnull())
+        .where(loans.deleted_at.isnull())
         .get_sql(),
         (username,)
     )
@@ -308,8 +308,8 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .join(borrowers).on(borrowers.id == loans.borrower_id)
         .join(principals).on(principals.id == loans.principal_id)
         .where(borrowers.username == Parameter('%s'))
-        .where(loans.repaid_at.notnone())
-        .where(loans.deleted_at.isnone())
+        .where(loans.repaid_at.notnull())
+        .where(loans.deleted_at.isnull())
         .get_sql(),
         (username,)
     )
@@ -326,8 +326,8 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .join(lenders).on(lenders.id == loans.lender_id)
         .join(principals).on(principals.id == loans.principal_id)
         .where(lenders.username == Parameter('%s'))
-        .where(loans.unpaid_at.notnone())
-        .where(loans.deleted_at.isnone())
+        .where(loans.unpaid_at.notnull())
+        .where(loans.deleted_at.isnull())
         .get_sql(),
         (username,)
     )
@@ -342,7 +342,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         itgs.read_cursor.execute(
             create_loans_query()
             .where(lenders.username == Parameter('%s'))
-            .where(loans.unpaid_at.notnone())
+            .where(loans.unpaid_at.notnull())
             .where(loans.created_at > Parameter('%s'))
             .orderby(loans.created_at, order=Order.desc)
             .limit(max_loans_per_table)
@@ -360,8 +360,8 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .join(borrowers).on(borrowers.id == loans.borrower_id)
         .join(principals).on(principals.id == loans.principal_id)
         .where(borrowers.username == Parameter('%s'))
-        .where(loans.unpaid_at.notnone())
-        .where(loans.deleted_at.isnone())
+        .where(loans.unpaid_at.notnull())
+        .where(loans.deleted_at.isnull())
         .get_sql(),
         (username,)
     )
@@ -376,7 +376,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         itgs.read_cursor.execute(
             create_loans_query()
             .where(borrowers.username == Parameter('%s'))
-            .where(loans.unpaid_at.notnone())
+            .where(loans.unpaid_at.notnull())
             .where(loans.created_at > Parameter('%s'))
             .orderby(loans.created_at, order=Order.desc)
             .limit(max_loans_per_table)
@@ -394,9 +394,9 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .join(lenders).on(lenders.id == loans.lender_id)
         .join(principals).on(principals.id == loans.principal_id)
         .where(lenders.username == Parameter('%s'))
-        .where(loans.unpaid_at.isnone())
-        .where(loans.repaid_at.isnone())
-        .where(loans.deleted_at.isnone())
+        .where(loans.unpaid_at.isnull())
+        .where(loans.repaid_at.isnull())
+        .where(loans.deleted_at.isnull())
         .get_sql(),
         (username,)
     )
@@ -411,8 +411,8 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         itgs.read_cursor.execute(
             create_loans_query()
             .where(lenders.username == Parameter('%s'))
-            .where(loans.unpaid_at.isnone())
-            .where(loans.repaid_at.isnone())
+            .where(loans.unpaid_at.isnull())
+            .where(loans.repaid_at.isnull())
             .where(loans.created_at > Parameter('%s'))
             .orderby(loans.created_at, order=Order.desc)
             .limit(max_loans_per_table)
@@ -430,9 +430,9 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .join(borrowers).on(borrowers.id == loans.borrower_id)
         .join(principals).on(principals.id == loans.principal_id)
         .where(borrowers.username == Parameter('%s'))
-        .where(loans.unpaid_at.isnone())
-        .where(loans.repaid_at.isnone())
-        .where(loans.deleted_at.isnone())
+        .where(loans.unpaid_at.isnull())
+        .where(loans.repaid_at.isnull())
+        .where(loans.deleted_at.isnull())
         .get_sql(),
         (username,)
     )
@@ -447,8 +447,8 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         itgs.read_cursor.execute(
             create_loans_query()
             .where(borrowers.username == Parameter('%s'))
-            .where(loans.unpaid_at.isnone())
-            .where(loans.repaid_at.isnone())
+            .where(loans.unpaid_at.isnull())
+            .where(loans.repaid_at.isnull())
             .where(loans.created_at > Parameter('%s'))
             .orderby(loans.created_at, order=Order.desc)
             .limit(max_loans_per_table)
@@ -492,7 +492,7 @@ def get_and_format_all_or_summary(itgs: LazyIntegrations, username: str, thresho
             (lenders.username == Parameter('%s'))
             | (borrowers.username == Parameter('%s'))
         )
-        .where(loans.deleted_at.isnone())
+        .where(loans.deleted_at.isnull())
         .get_sql(),
         (username, username)
     )
@@ -555,7 +555,7 @@ def create_loans_query():
         .join(principal_repayment_currencies)
         .on(principal_repayment_currencies.id == principal_repayments.currency_id)
         .left_join(loan_creation_infos).on(loan_creation_infos.loan_id == loans.id)
-        .where(loans.deleted_at.isnone())
+        .where(loans.deleted_at.isnull())
     )
 
 
