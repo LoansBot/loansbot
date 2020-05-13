@@ -11,7 +11,7 @@ import time
 from datetime import datetime
 import query_helper
 from lbshared.responses import get_response
-from pypika import Query, Table, Parameter
+from pypika import PostgreSQLQuery as Query, Table, Parameter
 
 
 PARSER = Parser(

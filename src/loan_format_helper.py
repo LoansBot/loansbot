@@ -5,7 +5,7 @@ from typing import Optional, List
 import pytypeutils as tus
 from money import Money
 from datetime import datetime
-from pypika import Query, Table, Parameter, Order
+from pypika import PostgreSQLQuery as Query, Table, Parameter, Order
 from pypika.functions import Count, Sum, Star
 from lbshared.lazy_integrations import LazyIntegrations
 
