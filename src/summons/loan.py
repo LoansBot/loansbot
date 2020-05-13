@@ -117,7 +117,7 @@ class LoanSummon(Summon):
                 Query.into(currencies)
                 .columns(
                     currencies.code,
-                    ' ' + currencies.symbol,
+                    currencies.symbol,
                     currencies.symbol_on_left,
                     currencies.exponent
                 )
