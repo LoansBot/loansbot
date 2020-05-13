@@ -34,7 +34,7 @@ class CheckSummon(Summon):
         target_username = token_vals[0]
 
         report = loan_format_helper.get_and_format_all_or_summary(itgs, target_username)
-        (formatted_response,) = get_response(
+        formatted_response = get_response(
             itgs,
             'successful_loan',
             target_username=target_username,

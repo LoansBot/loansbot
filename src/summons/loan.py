@@ -210,7 +210,7 @@ class LoanSummon(Summon):
         store_amount.symbol_on_left = db_currency_sym_on_left
 
         processing_time = time.time() - start_at
-        (formatted_response,) = get_response(
+        formatted_response = get_response(
             itgs,
             'successful_loan',
             lender_username=lender_username,
