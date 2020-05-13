@@ -36,7 +36,7 @@ class CheckSummon(Summon):
         report = loan_format_helper.get_and_format_all_or_summary(itgs, target_username)
         formatted_response = get_response(
             itgs,
-            'successful_loan',
+            'check',
             target_username=target_username,
             report=report
         )
