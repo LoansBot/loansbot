@@ -125,10 +125,10 @@ class LoanSummon(Summon):
                 .returning(currencies.id, currencies.symbol, currencies.symbol_on_left)
                 .get_sql(),
                 (
-                    currencies.code,
-                    currencies.code,
+                    store_currency,
+                    ' ' + store_currency,
                     False,
-                    money.ISO_CODES_TO_EXP[currencies.code]
+                    money.ISO_CODES_TO_EXP[store_currency]
                 )
             )
         )
