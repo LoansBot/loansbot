@@ -121,7 +121,7 @@ class LoanSummon(Summon):
                     currencies.symbol_on_left,
                     currencies.exponent
                 )
-                .insert_query(*[Parameter('%s') for _ in range(4)])
+                .insert(*[Parameter('%s') for _ in range(4)])
                 .returning(currencies.id, currencies.symbol, currencies.symbol_on_left)
                 .get_sql(),
                 (
