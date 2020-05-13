@@ -242,7 +242,7 @@ def get_all_loans(itgs: LazyIntegrations, username: str):
         )
         .orderby(loans.created_at, order=Order.desc)
         .get_sql(),
-        (username, username)
+        (username.lower(), username.lower())
     )
     result = []
 
@@ -296,7 +296,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .where(loans.repaid_at.notnull())
         .where(loans.deleted_at.isnull())
         .get_sql(),
-        (username,)
+        (username.lower(),)
     )
     (num_loans, princ_loans) = itgs.read_cursor.fetchone()
     counts['paid_as_lender'] = {'number_of_loans': num_loans, 'principal_of_loans': princ_loans}
@@ -311,7 +311,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .where(loans.repaid_at.notnull())
         .where(loans.deleted_at.isnull())
         .get_sql(),
-        (username,)
+        (username.lower(),)
     )
     (num_loans, princ_loans) = itgs.read_cursor.fetchone()
     counts['paid_as_borrower'] = {
@@ -329,7 +329,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .where(loans.unpaid_at.notnull())
         .where(loans.deleted_at.isnull())
         .get_sql(),
-        (username,)
+        (username.lower(),)
     )
     (num_loans, princ_loans) = itgs.read_cursor.fetchone()
     counts['unpaid_as_lender'] = {
@@ -347,7 +347,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
             .orderby(loans.created_at, order=Order.desc)
             .limit(max_loans_per_table)
             .get_sql(),
-            (username, oldest_loans_in_table)
+            (username.lower(), oldest_loans_in_table)
         )
         row = itgs.read_cursor.fetchone()
         while row is not None:
@@ -363,7 +363,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .where(loans.unpaid_at.notnull())
         .where(loans.deleted_at.isnull())
         .get_sql(),
-        (username,)
+        (username.lower(),)
     )
     (num_loans, princ_loans) = itgs.read_cursor.fetchone()
     counts['unpaid_as_borrower'] = {
@@ -381,7 +381,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
             .orderby(loans.created_at, order=Order.desc)
             .limit(max_loans_per_table)
             .get_sql(),
-            (username, oldest_loans_in_table)
+            (username.lower(), oldest_loans_in_table)
         )
         row = itgs.read_cursor.fetchone()
         while row is not None:
@@ -398,7 +398,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .where(loans.repaid_at.isnull())
         .where(loans.deleted_at.isnull())
         .get_sql(),
-        (username,)
+        (username.lower(),)
     )
     (num_loans, princ_loans) = itgs.read_cursor.fetchone()
     counts['inprogress_as_lender'] = {
@@ -417,7 +417,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
             .orderby(loans.created_at, order=Order.desc)
             .limit(max_loans_per_table)
             .get_sql(),
-            (username, oldest_loans_in_table)
+            (username.lower(), oldest_loans_in_table)
         )
         row = itgs.read_cursor.fetchone()
         while row is not None:
@@ -434,7 +434,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
         .where(loans.repaid_at.isnull())
         .where(loans.deleted_at.isnull())
         .get_sql(),
-        (username,)
+        (username.lower(),)
     )
     (num_loans, princ_loans) = itgs.read_cursor.fetchone()
     counts['inprogress_as_borrower'] = {
@@ -453,7 +453,7 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
             .orderby(loans.created_at, order=Order.desc)
             .limit(max_loans_per_table)
             .get_sql(),
-            (username, oldest_loans_in_table)
+            (username.lower(), oldest_loans_in_table)
         )
         row = itgs.read_cursor.fetchone()
         while row is not None:
@@ -494,7 +494,7 @@ def get_and_format_all_or_summary(itgs: LazyIntegrations, username: str, thresho
         )
         .where(loans.deleted_at.isnull())
         .get_sql(),
-        (username, username)
+        (username.lower(), username.lower())
     )
     (cnt,) = itgs.read_cursor.fetchone()
     if cnt < threshold:
