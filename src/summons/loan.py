@@ -135,13 +135,13 @@ class LoanSummon(Summon):
         itgs.write_cursor.execute(
             Query.into(moneys)
             .columns(moneys.currency_id, moneys.amount, moneys.amount_usd_cents)
-            .insert(*[Parameter('%s') for _ in range(4)])
+            .insert(*[Parameter('%s') for _ in range(3)])
             .returning(moneys.id)
             .get_sql(),
             (
                 db_store_currency_id,
-                store_amount,
-                usd_amount
+                store_amount.minor,
+                usd_amount.minor
             )
         )
         (principal_id,) = itgs.write_cursor.fetchone()
