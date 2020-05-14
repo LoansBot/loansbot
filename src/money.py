@@ -27,18 +27,49 @@ class Money:
 
     minor (int): The number of minor currency units
     currency (str): The uppercased ISO4217 currency code
+    exp (int): The exponent for this currency type; will be fetched from iso
+        codes to exp if not provided
+    symbol (str, None): The symbol for this currency if there is a shorter
+        alternative to the ISO code. For example '$' and symbol on left=true
+        would become $15.00
+    symbol_on_left (bool): True if the symbol should go left of the quantity,
+        False if the symbol should go to the right of the quantiy.
     """
-    def __init__(self, minor, currency):
-        tus.check(minor=(minor, int), currency=(currency, str))
+    def __init__(self, minor, currency, exp=None, symbol=None, symbol_on_left=False):
+        tus.check(
+            minor=(minor, int),
+            currency=(currency, str),
+            exp=(exp, (type(None), int)),
+            symbol=(symbol, (type(None), str)),
+            symbol_on_left=(symbol_on_left, bool)
+        )
         self.minor = minor
         self.currency = currency
+        self.exp = exp if exp is not None else ISO_CODES_TO_EXP[currency]
+        self.symbol = symbol
+        self.symbol_on_left = symbol_on_left
+
+    def major_str(self):
+        """Format the amount in the major currency. So e.g. 100 minor USD
+        becomes $1.00
+        """
+        if self.exp == 0:
+            return str(self.minor)
+        major = self.minor / (10 ** self.exp)
+        return ('{:.' + str(self.exp) + 'f}').format(major)
 
     def __repr__(self):
-        exp = ISO_CODES_TO_EXP[self.currency]
-        if exp == 0:
-            return f'{self.minor} {self.currency}'
-        major = self.minor / (10 ** exp)
-        return ('{:.' + str(exp) + 'f} {}').format(major, self.currency)
+        return '{} {}'.format(self.major_str(), self.currency)
+
+    def __str__(self):
+        if self.symbol is None:
+            return repr(self)
+
+        if self.symbol_on_left:
+            fmt = '{symbol}{major}'
+        else:
+            fmt = '{major}{symbol}'
+        return fmt.format(major=self.major_str(), symbol=self.symbol)
 
     def __eq__(self, other):
         return (

@@ -5,6 +5,8 @@ from .summon import Summon
 from parsing.parser import Parser
 import parsing.ext_tokens
 import utils.reddit_proxy
+import loan_format_helper
+from lbshared.responses import get_response
 
 
 PARSER = Parser(
@@ -29,17 +31,20 @@ class CheckSummon(Summon):
 
     def handle_comment(self, itgs, comment, rpiden, rpversion):
         token_vals = PARSER.parse(comment['body'])
-        requester_username = comment['author']
         target_username = token_vals[0]
+
+        report = loan_format_helper.get_and_format_all_or_summary(itgs, target_username)
+        formatted_response = get_response(
+            itgs,
+            'check',
+            target_username=target_username,
+            report=report
+        )
 
         utils.reddit_proxy.send_request(
             itgs, rpiden, rpversion, 'post_comment',
             {
                 'parent': comment['fullname'],
-                'text': (
-                    'Detected that /u/{} wants to check /u/{}'.format(
-                        requester_username, target_username
-                    )
-                )
+                'text': formatted_response
             }
         )
