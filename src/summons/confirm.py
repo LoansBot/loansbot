@@ -99,7 +99,7 @@ class ConfirmSummon(Summon):
             .get_sql(),
             (lender_username.lower(), borrower_username.lower())
         )
-        row = itgs.fetchone()
+        row = itgs.read_cursor.fetchone()
 
         if row is None:
             formatted_response = get_response(
