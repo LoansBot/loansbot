@@ -57,7 +57,10 @@ class LoanSummon(Summon):
             # Where possible we want the source to be consistent rather than
             # the target as it allows us to reuse requests
             usd_rate = 1 / convert.convert(itgs, 'USD', store_currency)
-            usd_amount = money.Money(int(store_amount.minor * usd_rate), 'USD')
+            usd_amount = money.Money(
+                int(store_amount.minor * usd_rate), 'USD',
+                exp=2, symbol='$', symbol_on_left=True
+            )
 
         users = Table('users')
         currencies = Table('currencies')
