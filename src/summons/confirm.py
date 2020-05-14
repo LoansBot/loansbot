@@ -124,7 +124,7 @@ class ConfirmSummon(Summon):
                     if parent_fullname is None
                     else
                     'https://reddit.com/comments/{}/redditloans/{}'.format(
-                        parent_fullname, comment_fullname
+                        parent_fullname[3:], comment_fullname[3:]
                     )
                 ),
                 loan_id=loan_id
