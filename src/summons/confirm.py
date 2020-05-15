@@ -10,6 +10,7 @@ import utils.reddit_proxy
 from convert import convert
 from money import Money
 from lbshared.responses import get_response
+from lblogging import Level
 
 
 PARSER = Parser(
@@ -130,6 +131,16 @@ class ConfirmSummon(Summon):
                 loan_id=loan_id
             )
 
+        itgs.logger.print(
+            Level.INFO,
+            '/u/{} confirmed /u/{} sent him {} (matched loan: {}). Permalink: {}',
+            borrower_username, lender_username, amt,
+            'no' if row is None else f'yes, loan {loan_id}',
+            'https://reddit.com/comments/{}/redditloans/{}'.format(
+                comment['link_fullname'][3:],
+                comment['fullname'][3:]
+            )
+        )
         utils.reddit_proxy.send_request(
             itgs, rpiden, rpversion, 'post_comment',
             {

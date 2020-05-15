@@ -15,6 +15,7 @@ class Loan(BaseModel):
     joined with all the useful information
 
     Attributes:
+        id (int): The primary key for the loan
         lender (str): The username for the lender
         borrower (str): The username for the borrower
         principal (Money): The amount of money the lender sent the borrower. It
@@ -31,6 +32,7 @@ class Loan(BaseModel):
         unpaid_at (datetime, None): When this loan was marked unpaid, None if
             that never happened or has been undone
     """
+    id: int
     lender: str
     borrower: str
     principal: Money
@@ -44,20 +46,29 @@ class Loan(BaseModel):
         arbitrary_types_allowed = True
 
 
-def format_loan_table(loans: List[Loan]):
+def format_loan_table(loans: List[Loan], include_id=False):
     """Format the given list of loans into a markdown table.
+
+    Arguments:
+        loans (list[Loan]): The list of loans to format into a table.
+        include_id (bool): True if the id of the loan should be included in
+            the table, false otherwise
+
+    Returns:
+        (str) The markdown formatted table
     """
-    tus.check(loans=(loans, (tuple, list)))
+    tus.check(loans=(loans, (tuple, list)), include_id=(include_id, bool))
     tus.check_listlike(loans=(loans, Loan))
 
     result_lines = [
         'Lender|Borrower|Amount Given|Amount Repaid|Unpaid?|Original Thread'
-        + '|Date Given|Date Paid Back',
-        ':--|:--|:--|:--|:--|:--|:--|:--'
+        + '|Date Given|Date Paid Back' + ('|id' if include_id else ''),
+        ':--|:--|:--|:--|:--|:--|:--|:--' + ('|:--' if include_id else '')
     ]
     line_fmt = '|'.join('{' + a + '}' for a in (
         'lender', 'borrower', 'principal', 'principal_repayment',
-        'unpaid_bool', 'permalink', 'created_at_pretty', 'repaid_at_pretty'
+        'unpaid_bool', 'permalink', 'created_at_pretty', 'repaid_at_pretty',
+        *(['id'] if include_id else [])
     ))
     for loan in loans:
         loan_dict = loan.dict().copy()
@@ -528,6 +539,7 @@ def create_loans_query():
     return (
         Query.from_(loans)
         .select(
+            loans.id,
             lenders.username,
             borrowers.username,
             principals.amount,
@@ -569,6 +581,7 @@ def fetch_loan(row):
         (Loan) The loan object
     """
     (
+        loan_id,
         lender_username,
         borrower_username,
         principal_amount,
@@ -597,6 +610,7 @@ def fetch_loan(row):
         )
 
     return Loan(
+        id=loan_id,
         lender=lender_username,
         borrower=borrower_username,
         principal=Money(

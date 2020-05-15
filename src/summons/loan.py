@@ -11,6 +11,7 @@ import time
 from datetime import datetime
 import query_helper
 from lbshared.responses import get_response
+from lblogging import Level
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 
 
@@ -208,6 +209,18 @@ class LoanSummon(Summon):
             )
         )
         itgs.write_conn.commit()
+
+        itgs.logger.print(
+            Level.INFO,
+            '/u/{} just lent /u/{} {} - permalink: {}',
+            lender_username,
+            borrower_username,
+            store_amount,
+            'https://reddit.com/comments/{}/redditloans/{}'.format(
+                comment['link_fullname'][3:],
+                comment['fullname'][3:]
+            )
+        )
 
         store_amount.symbol = db_currency_symbol
         store_amount.symbol_on_left = db_currency_sym_on_left
