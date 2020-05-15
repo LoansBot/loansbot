@@ -51,7 +51,7 @@ class PaidWithIdSummon(Summon):
             .get_sql(),
             (loan_id,)
         )
-        row = itgs.fetchone()
+        row = itgs.write_cursor.fetchone()
         if row is None:
             itgs.logger.print(
                 Level.INFO,
