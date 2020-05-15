@@ -133,7 +133,7 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
             symbol_on_left=loan_currency_symbol_on_left
         )
     else:
-        applied_in_given_currency = int(math.ceil(applied.amount / rate_given_to_loan))
+        applied_in_given_currency = int(math.ceil(applied.minor / rate_given_to_loan))
         remaining = Money(
             max(0, amount.minor - applied_in_given_currency),
             amount.currency, exp=amount.exp, symbol=amount.symbol,
