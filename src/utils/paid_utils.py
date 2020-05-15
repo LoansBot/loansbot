@@ -143,7 +143,7 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
     itgs.write_cursor.execute(
         Query.into(moneys)
         .columns(
-            moneys.currency_d,
+            moneys.currency_id,
             moneys.amount,
             moneys.amount_usd_cents
         )
