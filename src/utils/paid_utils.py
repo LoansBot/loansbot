@@ -190,7 +190,7 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
         itgs.write_cursor.execute(
             Query.update(loans)
             .set(loans.repaid_at, Now())
-            .set(loans.updated_at, None)
+            .set(loans.unpaid_at, None)
             .where(loans.id == Parameter('%s'))
             .get_sql(),
             (loan_id,)
