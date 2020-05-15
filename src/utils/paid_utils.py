@@ -118,7 +118,7 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
         )
 
     applied = Money(
-        min(principal_repayment_amount - principal_amount, loan_currency_amount.minor),
+        min(principal_amount - principal_repayment_amount, loan_currency_amount.minor),
         amount.currency,
         exp=amount.exp,
         symbol=amount.symbol,

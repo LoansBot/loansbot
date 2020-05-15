@@ -89,7 +89,7 @@ class PaidWithIdSummon(Summon):
             )
             return
 
-        (applied, remaining, _) = utils.paid_utils.apply_repayment(itgs, loan_id, amt)
+        (_, applied, remaining) = utils.paid_utils.apply_repayment(itgs, loan_id, amt)
 
         itgs.write_cursor.execute(
             loan_format_helper.create_loans_query()
