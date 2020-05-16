@@ -4,7 +4,7 @@ import os
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 import traceback
 import utils.reddit_proxy
-from perms import can_interact
+from perms import can_interact, IGNORED_USERS
 from summons.check import CheckSummon
 from summons.confirm import ConfirmSummon
 from summons.loan import LoanSummon
@@ -87,7 +87,9 @@ def scan_for_comments(itgs, version, summons):
                         continue
                     summon_to_use = summon
                     break
-            else:
+            elif comment['author'].lower() not in IGNORED_USERS:
+                # We don't print any log messages for users ignored via the env
+                # var since they are usually us or other bots
                 itgs.logger.print(
                     Level.INFO,
                     'Using no summons for {} by {}; insufficient access',
