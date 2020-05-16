@@ -96,7 +96,7 @@ class PaidSummon(Summon):
 
         itgs.logger.print(
             Level.INFO,
-            '/u/{} was repaid by /u/{} by {} over {} loan%s at {}',
+            '/u/{} was repaid by /u/{} by {} over {} loan{} at {}',
             lender_username, borrower_username, amt,
             len(effected_loans_pre), 's' if len(effected_loans_pre) != 1 else '',
             comment_permalink
