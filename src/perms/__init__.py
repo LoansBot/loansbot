@@ -1,1 +1,1 @@
-from .manager import can_interact  # noqa: F401
+from .manager import can_interact, IGNORED_USERS  # noqa: F401
