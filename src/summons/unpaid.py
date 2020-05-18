@@ -63,7 +63,7 @@ class UnpaidSummon(Summon):
             itgs.write_cursor.execute(
                 Query.update(loans)
                 .set(loans.unpaid_at, Now())
-                .where(loans.id.isin([Parameter('%s') for _ in range(affected_pre)]))
+                .where(loans.id.isin([Parameter('%s') for _ in affected_pre]))
                 .get_sql(),
                 tuple(loan.id for loan in affected_pre)
             )
@@ -84,7 +84,7 @@ class UnpaidSummon(Summon):
 
             itgs.write_cursor.execute(
                 loan_format_helper.create_loans_query()
-                .where(loans.id.isin([Parameter('%s') for _ in range(affected_pre)]))
+                .where(loans.id.isin([Parameter('%s') for _ in affected_pre]))
                 .get_sql(),
                 tuple(loan.id for loan in affected_pre)
             )
