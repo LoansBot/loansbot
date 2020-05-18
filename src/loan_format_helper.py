@@ -471,6 +471,12 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
             shown['inprogress_as_borrower'].append(fetch_loan(row))
             row = itgs.read_cursor.fetchone()
 
+    for cnt in counts:
+        cnt['principal_of_loans'] = Money(
+            cnt['principal_of_loans'], 'USD',
+            exp=2, symbol='$', symbol_on_left=True
+        )
+
     return (username, counts, shown)
 
 
