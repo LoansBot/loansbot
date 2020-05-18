@@ -196,4 +196,16 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
             (loan_id,)
         )
 
+        if unpaid_at is not None:
+            loan_unpaid_events = Table('loan_unpaid_events')
+            itgs.write_cursor.execute(
+                Query.into(loan_unpaid_events)
+                .columns(
+                    loan_unpaid_events.loan_id,
+                    loan_unpaid_events.unpaid
+                ).insert(*[Parameter('%s') for _ in range(2)])
+                .get_sql(),
+                (loan_id, False)
+            )
+
     return (repayment_event_id, applied, remaining)
