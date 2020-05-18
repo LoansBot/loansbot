@@ -9,6 +9,7 @@ from pypika import PostgreSQLQuery as Query, Table, Parameter
 from pypika.functions import Now
 import loan_format_helper
 from lblogging import Level
+from lbshared.responses import get_response
 
 PARSER = Parser(
     '$unpaid',
