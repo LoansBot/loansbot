@@ -472,8 +472,12 @@ def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table:
             row = itgs.read_cursor.fetchone()
 
     for cnt in counts.values():
+        princ = cnt['principal_of_loans']
+        if princ is None:
+            princ = 0
+
         cnt['principal_of_loans'] = Money(
-            cnt['principal_of_loans'], 'USD',
+            princ, 'USD',
             exp=2, symbol='$', symbol_on_left=True
         )
 
