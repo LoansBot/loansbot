@@ -91,7 +91,7 @@ class UnpaidSummon(Summon):
             row = itgs.write_cursor.fetchone()
             affected_post = []
             while row is not None:
-                affected_post.append(itgs.fetch_loan(row))
+                affected_post.append(loan_format_helper.fetch_loan(row))
                 row = itgs.write_cursor.fetchone()
         else:
             affected_post = []
