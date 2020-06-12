@@ -3,7 +3,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 import pytypeutils as tus
-from money import Money
+from lbshared.money import Money
 from datetime import datetime
 from pypika import PostgreSQLQuery as Query, Table, Parameter, Order
 from pypika.functions import Count, Sum, Star
