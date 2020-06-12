@@ -5,7 +5,7 @@ from .summon import Summon
 from parsing.parser import Parser
 import parsing.ext_tokens
 import utils.reddit_proxy
-import convert
+import lbshared.convert as convert
 import lbshared.money as money
 import time
 from datetime import datetime
