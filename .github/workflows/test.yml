@@ -59,6 +59,7 @@ jobs:
       run: |
         mkdir ./working
         mv ./loansbot/src ./working/src
+        mv ./loansbot/tests ./working/tests
         mv ./logging/src/lblogging ./working/src/lblogging
         mv ./shared/src/lbshared ./working/src/lbshared
     - name: Generic python setup
@@ -101,7 +102,7 @@ jobs:
     - name: Run tests
       working-directory: ./working/tests
       run: |
-        python -m unittest discover
+        python -m unittest discover -s .
     - name: Get database logs
       if: always()
       working-directory: working/src
