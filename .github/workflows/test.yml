@@ -99,7 +99,7 @@ jobs:
         DATABASE_PASSWORD: dev
         DATABASE_DBNAME: postgres
     - name: Run tests
-      working-directory: ./working/tests/integration
+      working-directory: ./working/tests
       run: |
         python -m unittest discover
     - name: Get database logs
