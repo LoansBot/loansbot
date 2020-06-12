@@ -3,7 +3,7 @@ import unittest
 import helper  # noqa
 from parsing.parser import Parser
 import parsing.ext_tokens
-import money
+import lbshared.money as money
 
 try:
     from summons.loan import PARSER

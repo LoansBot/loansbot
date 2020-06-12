@@ -6,7 +6,7 @@ from parsing.parser import Parser
 import parsing.ext_tokens
 import utils.reddit_proxy
 import convert
-import money
+import lbshared.money as money
 import time
 from datetime import datetime
 import query_helper

@@ -2,7 +2,7 @@
 useful in and of themselves.
 """
 import parsing.tokens as tkns
-import money
+import lbshared.money as money
 import re
 
 

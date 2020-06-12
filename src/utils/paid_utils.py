@@ -2,7 +2,7 @@
 from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 from pypika.functions import Now
-from money import Money
+from lbshared.money import Money
 from convert import convert
 import pytypeutils as tus
 import math

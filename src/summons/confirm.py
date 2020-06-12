@@ -8,7 +8,7 @@ from pypika import PostgreSQLQuery as Query, Table, Parameter, Order
 import parsing.ext_tokens
 import utils.reddit_proxy
 from convert import convert
-from money import Money
+from lbshared.money import Money
 from lbshared.responses import get_response
 from lblogging import Level
 
