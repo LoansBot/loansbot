@@ -103,6 +103,9 @@ jobs:
       working-directory: ./working/tests
       run: |
         python -m unittest discover -s .
+      env:
+        KARMA_MIN: 1000
+        ACCOUNT_AGE_SECONDS_MIN: 7776000
     - name: Get database logs
       if: always()
       working-directory: working/src
