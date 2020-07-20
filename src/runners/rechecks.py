@@ -26,6 +26,7 @@ def main():
     with LazyIntegrations(no_read_only=True, logger_iden='runners/rechecks.py#main') as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
+        itgs.channel.queue_declare(queue)
         while True:
             for row in itgs.channel.consume(QUEUE_NAME, inactivity_timeout=3000):
                 (method_frame, properties, body_bytes) = row
