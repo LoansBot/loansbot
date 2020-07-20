@@ -109,6 +109,7 @@ class PaidWithIdSummon(Summon):
         formatted_response = get_response(
             itgs,
             'paid_with_id',
+            loan_id=loan.id,
             lender_username=lender_username,
             borrower_username=loan.borrower,
             loan_before=loan_format_helper.format_loan_table([loan], include_id=True),
