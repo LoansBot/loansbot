@@ -13,7 +13,7 @@ import atexit
 import signal
 
 
-SUBPROCESSES = ('runners.comments', 'runners.modlog')
+SUBPROCESSES = ('runners.comments', 'runners.modlog', 'runners.rechecks')
 
 
 def main():

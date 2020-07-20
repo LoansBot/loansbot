@@ -4,26 +4,14 @@ import os
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 import traceback
 import utils.reddit_proxy
-from perms import can_interact, IGNORED_USERS
-from summons.check import CheckSummon
-from summons.confirm import ConfirmSummon
-from summons.loan import LoanSummon
-from summons.paid_with_id import PaidWithIdSummon
-from summons.paid import PaidSummon
-from summons.ping import PingSummon
-from summons.unpaid import UnpaidSummon
+from summon_helper import handle_comment
 
 from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
-from lbshared.signal_helper import delay_signals
 
 
 def main():
     """Periodically scans for new comments in relevant subreddits."""
-    summons = [
-        CheckSummon(), ConfirmSummon(), LoanSummon(), PaidWithIdSummon(),
-        PaidSummon(), PingSummon(), UnpaidSummon()
-    ]
     version = time.time()
 
     with LazyIntegrations(logger_iden='runners/comments.py#main') as itgs:
@@ -32,7 +20,7 @@ def main():
     while True:
         with LazyIntegrations(no_read_only=True, logger_iden='runners/comments.py#main') as itgs:
             try:
-                scan_for_comments(itgs, version, summons)
+                scan_for_comments(itgs, version)
             except:  # noqa
                 itgs.write_conn.rollback()
                 itgs.logger.exception(
@@ -43,7 +31,7 @@ def main():
         time.sleep(60)
 
 
-def scan_for_comments(itgs, version, summons):
+def scan_for_comments(itgs, version):
     """Scans for new comments using the given logger and amqp connection"""
     itgs.logger.print(Level.TRACE, 'Scanning for new comments..')
     after = None
@@ -78,53 +66,18 @@ def scan_for_comments(itgs, version, summons):
         for comment in comments:
             if comment['fullname'] in seen_set:
                 continue
-            itgs.logger.print(Level.TRACE, 'Checking comment {}', comment['fullname'])
 
-            summon_to_use = None
-            if can_interact(itgs, comment['author'], rpiden, version):
-                for summon in summons:
-                    if not summon.might_apply_to_comment(comment):
-                        continue
-                    summon_to_use = summon
-                    break
-            elif comment['author'].lower() not in IGNORED_USERS:
-                # We don't print any log messages for users ignored via the env
-                # var since they are usually us or other bots
-                itgs.logger.print(
-                    Level.INFO,
-                    'Using no summons for {} by {}; insufficient access',
-                    comment['fullname'], comment['author']
-                )
+            handle_comment(itgs, comment, rpiden, version)
+            itgs.write_cursor.execute(
+                Query.into(handled_fullnames)
+                .columns('fullname')
+                .insert(Parameter('%s'))
+                .get_sql(),
+                (comment['fullname'],)
+            )
+            itgs.write_conn.commit()
 
             num_to_find = num_to_find - 1
-            with delay_signals(itgs):
-                if summon_to_use is not None:
-                    itgs.logger.print(Level.DEBUG, 'Using summon {}', summon_to_use.name)
-                    try:
-                        summon_to_use.handle_comment(itgs, comment, rpiden, version)
-
-                        itgs.read_conn.commit()
-                        itgs.write_conn.commit()
-                    except:  # noqa
-                        itgs.read_conn.rollback()
-                        itgs.write_conn.rollback()
-                        itgs.logger.exception(
-                            Level.WARN,
-                            'While using summon {} on comment {}',
-                            summon_to_use.name, comment
-                        )
-                        traceback.print_exc()
-
-                itgs.write_cursor.execute(
-                    Query.into(handled_fullnames)
-                    .columns('fullname')
-                    .insert(Parameter('%s'))
-                    .get_sql(),
-                    (comment['fullname'],)
-                )
-                itgs.write_conn.commit()
-
-            itgs.logger.print(Level.TRACE, 'Finished handling comment {}', comment['fullname'])
             if num_to_find <= 0:
                 break
 
