@@ -26,9 +26,10 @@ def main():
     with LazyIntegrations(no_read_only=True, logger_iden='runners/rechecks.py#main') as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
-        itgs.channel.queue_declare(QUEUE_NAME)
+        read_channel = itgs.amqp.channel()
+        read_channel.queue_declare(QUEUE_NAME)
         while True:
-            for row in itgs.channel.consume(QUEUE_NAME, inactivity_timeout=3000):
+            for row in read_channel.consume(QUEUE_NAME, inactivity_timeout=3000):
                 (method_frame, properties, body_bytes) = row
                 if method_frame is None:
                     itgs.logger.print(Level.TRACE, 'No rechecks in last 30 minutes; still alive')
@@ -46,7 +47,7 @@ def main():
                         ),
                         exc.doc, exc.msg, exc.pos, exc.lineno, exc.colno
                     )
-                    itgs.channel.basic_nack(method_frame.delivery_tag, requeue=False)
+                    read_channel.basic_nack(method_frame.delivery_tag, requeue=False)
                     continue
 
                 errors = get_packet_errors(body)
@@ -58,7 +59,7 @@ def main():
                         len(errors),
                         '\n- '.join(errors)
                     )
-                    itgs.channel.basic_nack(method_frame.delivery_tag, requeue=False)
+                    read_channel.basic_nack(method_frame.delivery_tag, requeue=False)
                     continue
 
                 rp_body = utils.reddit_proxy.send_request(
@@ -71,15 +72,15 @@ def main():
                     itgs.logger.print(
                         Level.INFO,
                         'Got unexpected response type {} for comment lookup request '
-                        'during recheck; recheck suppressed (comment mightn to exist)',
+                        'during recheck; recheck suppressed (comment might not exist)',
                         rp_body['type']
                     )
-                    itgs.channel.basic_nack(method_frame.delivery_tag, requeue=False)
+                    read_channel.basic_nack(method_frame.delivery_tag, requeue=False)
                     continue
 
                 comment = rp_body['info']
                 handle_comment(itgs, comment, 'rechecks', version)
-                itgs.channel.basic_ack(method_frame.delivery_tag)
+                read_channel.basic_ack(method_frame.delivery_tag)
 
 
 def get_packet_errors(packet):
