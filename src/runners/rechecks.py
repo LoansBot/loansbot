@@ -72,7 +72,7 @@ def main():
                     itgs.logger.print(
                         Level.INFO,
                         'Got unexpected response type {} for comment lookup request '
-                        'during recheck; recheck suppressed (comment mightn to exist)',
+                        'during recheck; recheck suppressed (comment might not exist)',
                         rp_body['type']
                     )
                     read_channel.basic_nack(method_frame.delivery_tag, requeue=False)
