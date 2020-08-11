@@ -13,6 +13,7 @@ import query_helper
 from lbshared.responses import get_response
 from lblogging import Level
 from pypika import PostgreSQLQuery as Query, Table, Parameter
+import json
 
 
 PARSER = Parser(
@@ -238,9 +239,12 @@ class LoanSummon(Summon):
             'loans.create',
             json.dumps({
                 'loan_id': loan_id,
-                'comment': { 'link_fullname': comment['link_fullname'], 'fullname': comment['fullname'] },
-                'lender': { 'id': lender_user_id, 'username': lender_username },
-                'borrower': { 'id': borrower_user_id, 'username': borrower_username },
+                'comment': {
+                    'link_fullname': comment['link_fullname'],
+                    'fullname': comment['fullname']
+                },
+                'lender': {'id': lender_user_id, 'username': lender_username},
+                'borrower': {'id': borrower_user_id, 'username': borrower_username},
                 'amount': {
                     'minor': store_amount.minor,
                     'currency': store_amount.currency,

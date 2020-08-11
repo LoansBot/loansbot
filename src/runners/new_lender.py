@@ -7,6 +7,8 @@ from lbshared.money import Money
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 from pypika.functions import Count
 import utils.reddit_proxy
+import json
+from lbshared.responses import get_response
 
 
 def main():
@@ -26,8 +28,8 @@ def main():
 
         consumer_channel.queue_bind(queue_name, 'events', 'loans.create')
         consumer = consumer_channel.consume(queue_name, inactivity_timeout=600)
-        for method, props, body_bytes in consumer:
-            if method is None:
+        for method_frame, props, body_bytes in consumer:
+            if method_frame is None:
                 pass
             body_str = body_bytes.decode('utf-8')
             body = json.loads(body_str)
@@ -82,7 +84,10 @@ def handle_loan_create(version, event):
         if num_previous_loans > 0:
             itgs.logger.print(
                 Level.TRACE,
-                'Ignoring the loan by /u/{} to /u/{} - /u/{} has {} previous loans, so they are not new',
+                (
+                    'Ignoring the loan by /u/{} to /u/{} - /u/{} has {} ' +
+                    'previous loans, so they are not new'
+                ),
                 event['lender']['username'], event['borrower']['username'],
                 event['lender']['username'], num_previous_loans
             )
