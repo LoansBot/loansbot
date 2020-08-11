@@ -210,20 +210,47 @@ class LoanSummon(Summon):
         )
         itgs.write_conn.commit()
 
-        itgs.logger.print(
-            Level.INFO,
-            '/u/{} just lent /u/{} {} - permalink: {}',
-            lender_username,
-            borrower_username,
-            store_amount,
+        store_amount.symbol = db_currency_symbol
+        store_amount.symbol_on_left = db_currency_sym_on_left
+
+        permalink = (
             'https://reddit.com/comments/{}/redditloans/{}'.format(
                 comment['link_fullname'][3:],
                 comment['fullname'][3:]
             )
         )
 
-        store_amount.symbol = db_currency_symbol
-        store_amount.symbol_on_left = db_currency_sym_on_left
+        itgs.logger.print(
+            Level.INFO,
+            '/u/{} just lent /u/{} {} - permalink: {}',
+            lender_username,
+            borrower_username,
+            store_amount,
+            permalink
+        )
+
+        itgs.channel.exchange_declare(
+            'events',
+            'topic'
+        )
+        itgs.channel.basic_publish(
+            'events',
+            'loans.create',
+            json.dumps({
+                'loan_id': loan_id,
+                'comment': { 'link_fullname': comment['link_fullname'], 'fullname': comment['fullname'] },
+                'lender': { 'id': lender_user_id, 'username': lender_username },
+                'borrower': { 'id': borrower_user_id, 'username': borrower_username },
+                'amount': {
+                    'minor': store_amount.minor,
+                    'currency': store_amount.currency,
+                    'exp': store_amount.exp,
+                    'symbol': store_amount.symbol,
+                    'symbol_on_left': store_amount.symbol_on_left
+                },
+                'permalink': permalink
+            })
+        )
 
         processing_time = time.time() - start_at
         formatted_response = get_response(
