@@ -22,7 +22,7 @@ def main():
             'topic'
         )
 
-        consumer_channel = itgs.channel()
+        consumer_channel = itgs.amqp.channel()
         queue_declare_result = consumer_channel.queue_declare('', exclusive=True)
         queue_name = queue_declare_result.method.queue
 
