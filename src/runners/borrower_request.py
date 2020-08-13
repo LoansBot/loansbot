@@ -54,7 +54,8 @@ def handle_loan_request(version, event):
     """
     post = event['post']
     with LazyIntegrations(logger_iden='runners/borrower_request.py#handle_loan_request') as itgs:
-        itgs.logger.trace(
+        itgs.logger.print(
+            Level.TRACE,
             'Detected loan request from /u/{}',
             post['author']
         )
@@ -68,7 +69,8 @@ def handle_loan_request(version, event):
         )
         (author_user_id,) = itgs.read_cursor.fetchone()
         if author_user_id is None:
-            itgs.logger.trace(
+            itgs.logger.print(
+                Level.TRACE,
                 'Ignoring loan request from /u/{} - they do not have any ' +
                 'outstanding loans (no history)',
                 post['author']
@@ -95,14 +97,16 @@ def handle_loan_request(version, event):
             row = itgs.read_cursor.fetchone()
 
         if not outstanding_borrowed_loans:
-            itgs.logger.trace(
+            itgs.logger.print(
+                Level.TRACE,
                 'Ignoring loan request from /u/{} - no outstanding loans',
                 post['author']
             )
             return
 
         unique_lenders = frozenset(loan['lender_id'] for loan in outstanding_borrowed_loans)
-        itgs.logger.info(
+        itgs.logger.print(
+            Level.INFO,
             '/u/{} made a loan request while they have {} open loans from ' +
             '{} unique lenders: {}. Going to inform each lender which has not ' +
             'opted out of borrower request pms.',
@@ -113,7 +117,8 @@ def handle_loan_request(version, event):
         for lender_id in unique_lenders:
             lender_settings = get_settings(itgs, lender_id)
             if lender_settings.borrower_req_pm_opt_out:
-                itgs.logger.trace(
+                itgs.logger.print(
+                    Level.TRACE,
                     'Not sending an alert to user {} - opted out',
                     lender_id
                 )

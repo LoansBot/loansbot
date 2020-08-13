@@ -64,7 +64,8 @@ def handle_loan_create(version, event):
             permalink (str): A permanent link to the loan.
     """
     with LazyIntegrations(logger_iden='runners/new_lender.py#handle_loan_create') as itgs:
-        itgs.logger.trace(
+        itgs.logger.print(
+            Level.TRACE,
             'Detected loan from /u/{} to /u/{}',
             event['lender']['username'], event['borrower']['username']
         )
