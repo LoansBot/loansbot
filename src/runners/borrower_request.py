@@ -85,7 +85,7 @@ def handle_loan_request(version, event):
             .where(loans.repaid_at.isnull())
             .where(loans.unpaid_at.isnull())
             .get_sql(),
-            (event['lender']['id'], event['loan_id'])
+            (author_user_id,)
         )
         row = itgs.read_cursor.fetchone()
         outstanding_borrowed_loans = []
