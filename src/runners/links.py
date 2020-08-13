@@ -2,6 +2,7 @@
 import time
 import os
 import utils.reddit_proxy
+import utils.req_post_interpreter
 from lblogging import Level
 import lbshared.user_settings as user_settings
 from pypika import PostgreSQLQuery as Query, Table, Parameter
@@ -10,6 +11,7 @@ from lbshared.lazy_integrations import LazyIntegrations
 import traceback
 import loan_format_helper
 from lbshared.responses import get_response
+import json
 
 
 def main():
@@ -149,6 +151,20 @@ def _handle_self_post(itgs, version, post):
                     author, title
                 )
                 return
+    else:
+        request = utils.req_post_interpreter.interpret(title)
+        itgs.channel.exchange_declare(
+            'events',
+            'topic'
+        )
+        itgs.channel.basic_publish(
+            'events',
+            'loans.request',
+            json.dumps({
+                'post': post,
+                'request': request.dict()
+            })
+        )
 
     itgs.logger.print(
         Level.INFO,
