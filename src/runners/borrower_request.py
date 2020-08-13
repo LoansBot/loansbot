@@ -133,7 +133,7 @@ def handle_loan_request(version, event):
             formatted_body = get_response(
                 itgs,
                 'borrower_request',
-                lender_username=pretty_loans[0]['lender'],
+                lender_username=pretty_loans[0].lender,
                 borrower_username=post['author'],
                 thread='https://reddit.com/r/{}/comments/{}/redditloans'.format(
                     post['subreddit'], post['fullname'][3:]
