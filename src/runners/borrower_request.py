@@ -32,7 +32,7 @@ def main():
         consumer = consumer_channel.consume(queue_name, inactivity_timeout=600)
         for method_frame, props, body_bytes in consumer:
             if method_frame is None:
-                pass
+                continue
             body_str = body_bytes.decode('utf-8')
             body = json.loads(body_str)
             handle_loan_request(version, body)
