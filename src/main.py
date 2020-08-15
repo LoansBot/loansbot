@@ -19,6 +19,25 @@ SUBPROCESSES = (
 )
 
 
+def subprocess_runner(name):
+    """Runs the given submodule
+
+    Arguments:
+    - `name (str)`: The name of the module to run
+    """
+    mod = importlib.import_module(name)
+
+    try:
+        mod.main()
+    except:
+        with LazyIntegrations(logger_iden='main.py#subprocess_runner') as itgs:
+            itgs.logger.exception(
+                Level.WARN,
+                'Child process {} failed with an unhandled exception',
+                name
+            )
+
+
 def main():
     """Spawn all of the subprocesses as daemons and then works jobs until one
     one them dies or a signal to shutdown is received."""
@@ -29,8 +48,7 @@ def main():
         itgs.logger.print(Level.DEBUG, 'Booting up..')
         for modnm in SUBPROCESSES:
             itgs.logger.print(Level.TRACE, 'Spawning subprocess {}', modnm)
-            mod = importlib.import_module(modnm)
-            proc = Process(target=mod.main, daemon=True)
+            proc = Process(target=subprocess_runner, args=(modnm,), daemon=True)
             proc.start()
             subprocs.append(proc)
 
