@@ -17,12 +17,12 @@ def main():
     with LazyIntegrations(logger_iden='runners/new_lender.py#main') as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
-        itgs.channel.exchange_declare(
-            'events',
-            'topic'
-        )
-
+    with LazyIntegrations(logger_iden='runners/new_lender.py#main') as itgs:
+        # We want to keep as few connections open as possible since this is
+        # going to be super long-running. For this part we only need the amqp
+        # connection open.
         consumer_channel = itgs.amqp.channel()
+        consumer_channel.exchange_declare('events', 'topic')
         queue_declare_result = consumer_channel.queue_declare('', exclusive=True)
         queue_name = queue_declare_result.method.queue
 
