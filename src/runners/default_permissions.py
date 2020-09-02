@@ -119,8 +119,8 @@ def handle_user_signup(version, body):
             .where(
                 exists(
                     Query.from_(passwd_auth_perms_inner)
-                    .where(passwd_auth_perms.password_authentication_id == Parameter('%s'))
-                    .where(passwd_auth_perms.permission_id == perms.id)
+                    .where(passwd_auth_perms_inner.password_authentication_id == Parameter('%s'))
+                    .where(passwd_auth_perms_inner.permission_id == perms.id)
                 )
                 .negate()
             )
