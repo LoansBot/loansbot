@@ -5,8 +5,6 @@ from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
 from lbshared.pypika_crits import exists
 from pypika import PostgreSQLQuery as Query, Table, Parameter
-from pypika.functions import Count
-import utils.reddit_proxy
 import json
 import time
 import os

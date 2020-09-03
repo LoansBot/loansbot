@@ -29,7 +29,7 @@ def subprocess_runner(name):
 
     try:
         mod.main()
-    except:
+    except:  # noqa
         with LazyIntegrations(logger_iden='main.py#subprocess_runner') as itgs:
             itgs.logger.exception(
                 Level.WARN,
