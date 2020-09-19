@@ -100,6 +100,8 @@ Supported commands:
   seconds; defaults to 4 hours.
 - `IGNORED_USERS`: Comma separated list of usernames to ignore, should include
   the username we show up as (e.g., LoansBot)
+- `DEFAULT_PERMISSIONS`: Comma separated list of permissions we assign to users
+  when they sign up.
 
 ## Repayments
 

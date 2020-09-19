@@ -6,6 +6,7 @@ from lbshared.money import Money
 from lbshared.convert import convert
 import pytypeutils as tus
 import math
+import json
 
 
 def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
@@ -59,14 +60,21 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
 
     loans = Table('loans')
     moneys = Table('moneys')
+    usrs = Table('users')
     principals = moneys.as_('principals')
     principal_repayments = moneys.as_('principal_repayments')
     currencies = Table('currencies')
     principal_currencies = currencies.as_('principal_currencies')
+    lenders = usrs.as_('lenders')
+    borrowers = usrs.as_('borrowers')
 
     itgs.write_cursor.execute(
         Query.from_(loans)
         .select(
+            lenders.id,
+            lenders.username,
+            borrowers.id,
+            borrowers.username,
             principal_currencies.id,
             principal_currencies.code,
             principal_currencies.exponent,
@@ -81,6 +89,8 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
         .join(principals).on(principals.id == loans.principal_id)
         .join(principal_currencies).on(principal_currencies.id == principals.currency_id)
         .join(principal_repayments).on(principal_repayments.id == loans.principal_repayment_id)
+        .join(lenders).on(lenders.id == loans.lender_id)
+        .join(borrowers).on(borrowers.id == loans.borrower_id)
         .where(loans.id == Parameter('%s'))
         .get_sql(),
         (loan_id,)
@@ -90,6 +100,10 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
         raise ValueError(f'Loan {loan_id} does not exist')
 
     (
+        lender_user_id,
+        lender_username,
+        borrower_user_id,
+        borrower_username,
         loan_currency_id,
         loan_currency,
         loan_currency_exp,
@@ -207,5 +221,27 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
                 .get_sql(),
                 (loan_id, False)
             )
+
+        itgs.channel.exchange_declare(
+            'events',
+            'topic'
+        )
+        itgs.channel.basic_publish(
+            'events',
+            'loans.paid',
+            json.dumps({
+                'loan_id': loan_id,
+                'lender': {'id': lender_user_id, 'username': lender_username},
+                'borrower': {'id': borrower_user_id, 'username': borrower_username},
+                'amount': {
+                    'minor': amount.minor,
+                    'currency': amount.currency,
+                    'exp': amount.exp,
+                    'symbol': amount.symbol,
+                    'symbol_on_left': amount.symbol_on_left
+                },
+                'was_unpaid': unpaid_at is not None
+            })
+        )
 
     return (repayment_event_id, applied, remaining)

@@ -4,7 +4,7 @@ mccabe==0.6.1
 pika==1.1.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
-PyPika==0.35.21
+PyPika==0.39.1
 psycopg2==2.8.4
 pymemcache==3.0.0
 six==1.14.0

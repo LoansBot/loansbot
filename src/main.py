@@ -13,7 +13,30 @@ import atexit
 import signal
 
 
-SUBPROCESSES = ('runners.comments', 'runners.modlog', 'runners.rechecks')
+SUBPROCESSES = (
+    'runners.comments', 'runners.modlog', 'runners.rechecks', 'runners.links',
+    'runners.new_lender', 'runners.borrower_request', 'runners.default_permissions',
+    'runners.trust_loan_delays'
+)
+
+
+def subprocess_runner(name):
+    """Runs the given submodule
+
+    Arguments:
+    - `name (str)`: The name of the module to run
+    """
+    mod = importlib.import_module(name)
+
+    try:
+        mod.main()
+    except:  # noqa
+        with LazyIntegrations(logger_iden='main.py#subprocess_runner') as itgs:
+            itgs.logger.exception(
+                Level.WARN,
+                'Child process {} failed with an unhandled exception',
+                name
+            )
 
 
 def main():
@@ -26,8 +49,7 @@ def main():
         itgs.logger.print(Level.DEBUG, 'Booting up..')
         for modnm in SUBPROCESSES:
             itgs.logger.print(Level.TRACE, 'Spawning subprocess {}', modnm)
-            mod = importlib.import_module(modnm)
-            proc = Process(target=mod.main, daemon=True)
+            proc = Process(target=subprocess_runner, args=(modnm,), daemon=True)
             proc.start()
             subprocs.append(proc)
 
