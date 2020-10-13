@@ -7,7 +7,7 @@ frequency increases to every 3 days.
 from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
 from lbshared.queries import convert_numbered_args
-from pypika import PostgreSQLQuery as Query, Table, Parameter, Interval
+from pypika import PostgreSQLQuery as Query, Table, Parameter, Interval, Not
 from pypika.functions import Max, Min, Count, Now, Function, Floor
 from lbshared.pypika_crits import ExistsCriterion as Exists
 from datetime import datetime, timedelta
@@ -72,6 +72,7 @@ def main():
 
 def send_messages(version):
     alert_executors = [
+        execute_get_missing_initial_alerts,
         execute_get_missing_alerts_by_calendar_month,
         execute_get_missing_alerts_by_urgent
     ]
@@ -211,6 +212,54 @@ def group_alerts_by_user_id(itgs):
         alerts_grouped_by_user_id.append(current_info)
 
     return alerts_grouped_by_user_id
+
+
+def execute_get_missing_initial_alerts(itgs):
+    endpoint_users = Table('endpoint_users')
+    endpoint_alerts = Table('endpoint_alerts')
+    users = Table('users')
+    usage_after_filters = Table('usage_after_filters')
+
+    query = (
+        Query.with_(
+            Query.from_(endpoint_users)
+            .where(
+                Not(
+                    Exists(
+                        Query.from_(endpoint_alerts)
+                        .where(endpoint_alerts.endpoint_id == endpoint_users.endpoint_id)
+                        .where(endpoint_alerts.user_id == endpoint_users.user_id)
+                    )
+                )
+            )
+            .select(
+                endpoint_users.endpoint_id.as_('endpoint_id'),
+                endpoint_users.user_id.as_('user_id'),
+                Min(endpoint_users.created_at).as_('first_usage'),
+                Max(endpoint_users.created_at).as_('last_usage'),
+                Count(endpoint_users.id).as_('count_usage')
+            )
+            .groupby(
+                endpoint_users.endpoint_id,
+                endpoint_users.user_id
+            ),
+            'usage_after_filters'
+        )
+        .from_(usage_after_filters)
+        .join(users)
+        .on(users.id == usage_after_filters.user_id)
+        .select(
+            usage_after_filters.user_id,
+            users.username,
+            usage_after_filters.endpoint_id,
+            usage_after_filters.first_usage,
+            usage_after_filters.last_usage,
+            usage_after_filters.count_usage
+        )
+        .orderby(usage_after_filters.user_id)
+    )
+    sql = query.get_sql()
+    itgs.read_cursor.execute(sql)
 
 
 def execute_get_missing_alerts_by_calendar_month(itgs):
@@ -385,8 +434,6 @@ def execute_get_missing_alerts(itgs, bonus_filters):
     )
 
     (sql, ordered_args) = convert_numbered_args(query.get_sql(), args)
-    print(sql)
-    print(ordered_args)
     itgs.read_cursor.execute(sql, ordered_args)
 
 
@@ -434,6 +481,23 @@ def send_alerts_for_user(
         endpoints_table='\n'.join(endpoints_table_lines)
     )
 
+    endpoint_alerts = Table('endpoint_alerts')
+    query = (
+        Query.into(endpoint_alerts)
+        .columns(
+            endpoint_alerts.endpoint_id,
+            endpoint_alerts.user_id,
+            endpoint_alerts.alert_type
+        )
+    )
+    args = []
+    for alert in alerts_for_user:
+        query = query.insert(*(Parameter('%s') for _ in range(3)))
+        args.append(alert.endpoint_id)
+        args.append(alert.user_id),
+        args.append(alert_type)
+
+    itgs.write_cursor.execute(query.get_sql(), args)
     utils.reddit_proxy.send_request(
         itgs, 'deprecated_alerts', version, 'compose',
         {
