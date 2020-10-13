@@ -371,14 +371,14 @@ def execute_get_missing_alerts(itgs, bonus_filters):
         .join(users)
         .on(users.id == usage_after_filters.user_id)
         .select(
-            endpoint_users.user_id,
+            usage_after_filters.user_id,
             users.username,
             usage_after_filters.endpoint_id,
             usage_after_filters.first_usage,
             usage_after_filters.last_usage,
             usage_after_filters.count_usage
         )
-        .orderby(endpoint_users.user_id)
+        .orderby(usage_after_filters.user_id)
     )
 
     (sql, ordered_args) = convert_numbered_args(query.get_sql(), args)
