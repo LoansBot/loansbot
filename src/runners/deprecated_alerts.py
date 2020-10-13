@@ -21,14 +21,13 @@ class MissingAlertInfo:
     overhead.
     """
     __slots__ = (
-        'id', 'user_id', 'username', 'endpoint_id', 'first_use_in_interval',
+        'user_id', 'username', 'endpoint_id', 'first_use_in_interval',
         'last_use_in_interval', 'count_in_interval'
     )
 
     def __init__(
-            self, id, user_id, username, endpoint_id, first_use_in_interval,
+            self, user_id, username, endpoint_id, first_use_in_interval,
             last_use_in_interval, count_in_interval):
-        self.id = id
         self.user_id = user_id
         self.username = username
         self.endpoint_id = endpoint_id
