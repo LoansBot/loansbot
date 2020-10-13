@@ -108,7 +108,7 @@ def get_letter_message_format(itgs, alert_type):
     responses = Table('responses')
     itgs.read_cursor.execute(
         Query.from_(responses).select(responses.response_body)
-        .where(responses.name.isin((Parameter('%s') for _ in range(2))))
+        .where(responses.name.isin(tuple(Parameter('%s') for _ in range(2))))
         .orderby(responses.name)
         .get_sql(),
         (
