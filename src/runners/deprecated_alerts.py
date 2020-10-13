@@ -153,6 +153,9 @@ def get_endpoint_info_by_id(itgs, endpoint_ids):
       to the corresponding information.
     """
     endpoint_info_by_id = {}
+    if not endpoint_ids:
+        return endpoint_info_by_id
+
     endpoints = Table('endpoints')
     itgs.read_cursor.execute(
         Query.from_(endpoints)
