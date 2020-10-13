@@ -165,7 +165,7 @@ def get_endpoint_info_by_id(itgs, endpoint_ids):
             endpoints.sunsets_on
         )
         .where(
-            endpoints.id.isin((
+            endpoints.id.isin(tuple(
                 Parameter('%s') for _ in endpoint_ids
             ))
         )
