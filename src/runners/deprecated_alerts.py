@@ -228,12 +228,12 @@ def execute_get_missing_alerts_by_calendar_month(itgs):
         year=curtime.year if curtime.month > 1 else curtime.year - 1,
         month=curtime.month - 1 if curtime.month > 1 else 12,
         day=1
-    ).timestamp()
+    )
     ignore_after = datetime(
         year=curtime.year,
         month=curtime.month,
         day=1
-    ).timestamp()
+    )
 
     def bonus_filters(query, add_param, endpoint_users, **kwargs):
         return (
