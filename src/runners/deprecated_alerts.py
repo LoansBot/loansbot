@@ -81,7 +81,7 @@ def send_messages(version):
             alerts_grouped_by_user_id = group_alerts_by_user_id(itgs)
             unique_endpoint_ids = get_unique_endpoint_ids(alerts_grouped_by_user_id)
             endpoint_info_by_id = get_endpoint_info_by_id(itgs, tuple(unique_endpoint_ids))
-            title_message_format, body_message_format = get_letter_message_format(itgs, 'reminder')
+            title_message_format, body_message_format = get_letter_message_format(itgs, alert_type)
             send_grouped_alerts(
                 itgs,
                 alerts_grouped_by_user_id,
