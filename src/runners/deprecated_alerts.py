@@ -497,6 +497,7 @@ def send_alerts_for_user(
         args.append(alert_type)
 
     itgs.write_cursor.execute(query.get_sql(), args)
+    itgs.write_conn.commit()
     utils.reddit_proxy.send_request(
         itgs, 'deprecated_alerts', version, 'compose',
         {
