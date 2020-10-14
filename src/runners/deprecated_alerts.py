@@ -473,7 +473,7 @@ def send_alerts_for_user(
             + endpoint.sunsets_on.strftime(date_fmt) + '|'
             + alert.first_use_in_interval.strftime(date_fmt) + '|'
             + alert.last_use_in_interval.strftime(date_fmt) + '|'
-            + alert.count_in_interval
+            + str(alert.count_in_interval)
         )
 
     username = alerts_for_user[0].username
