@@ -460,7 +460,7 @@ def send_alerts_for_user(
     """
     date_fmt = '%b %d, %Y'
     endpoints_table_lines = [
-        'Endpoint | Deprecated on | Sunsets on',
+        'Endpoint | Deprecated on | Sunsets on | First Use | Last Use | Count',
         ':--|:--|:--'
     ]
 
@@ -470,7 +470,10 @@ def send_alerts_for_user(
         endpoints_table_lines.append(
             f'[{endpoint.slug}](https://redditloans.com/endpoints.html?slug={endpoint.slug})|'
             + endpoint.deprecated_on.strftime(date_fmt) + '|'
-            + endpoint.sunsets_on.strftime(date_fmt)
+            + endpoint.sunsets_on.strftime(date_fmt) + '|'
+            + alert.first_use_in_interval.strftime(date_fmt) + '|'
+            + alert.last_use_in_interval.strftime(date_fmt) + '|'
+            + alert.count_in_interval
         )
 
     username = alerts_for_user[0].username
