@@ -468,7 +468,7 @@ def send_alerts_for_user(
         alert: MissingAlertInfo
         endpoint: EndpointInfoForAlert = endpoint_info_by_id[alert.endpoint_id]
         endpoints_table_lines.append(
-            f'[{endpoint.slug}](https://reddit.com/endpoints.html?slug={endpoint.slug})|'
+            f'[{endpoint.slug}](https://redditloans.com/endpoints.html?slug={endpoint.slug})|'
             + endpoint.deprecated_on.strftime(date_fmt) + '|'
             + endpoint.sunsets_on.strftime(date_fmt)
         )
