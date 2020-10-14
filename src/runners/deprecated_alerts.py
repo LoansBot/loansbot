@@ -460,7 +460,7 @@ def send_alerts_for_user(
     """
     date_fmt = '%b %d, %Y'
     endpoints_table_lines = [
-        'Endpoint | Deprecated on | Sunsets on'
+        'Endpoint | Deprecated on | Sunsets on',
         ':--|:--|:--'
     ]
 
