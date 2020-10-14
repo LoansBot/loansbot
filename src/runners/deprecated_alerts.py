@@ -200,7 +200,7 @@ def group_alerts_by_user_id(itgs):
 
     while row is not None:
         alert_info = MissingAlertInfo(*row)
-        if current_info[0].user_id != row.user_id:
+        if current_info[0].user_id != alert_info.user_id:
             alerts_grouped_by_user_id.append(current_info)
             current_info = [alert_info]
         else:
