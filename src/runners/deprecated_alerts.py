@@ -70,13 +70,13 @@ def main():
 
 
 def send_messages(version):
-    alert_executors = [
-        execute_get_missing_initial_alerts,
-        execute_get_missing_alerts_by_calendar_month,
-        execute_get_missing_alerts_by_urgent
-    ]
+    alert_executors = (
+        (execute_get_missing_initial_alerts, 'initial_pm'),
+        (execute_get_missing_alerts_by_calendar_month, 'reminder'),
+        (execute_get_missing_alerts_by_urgent, 'reminder'),
+    )
     with LazyIntegrations(no_read_only=True) as itgs:
-        for alert_executor in alert_executors:
+        for alert_executor, alert_type in alert_executors:
             alert_executor(itgs)
             alerts_grouped_by_user_id = group_alerts_by_user_id(itgs)
             unique_endpoint_ids = get_unique_endpoint_ids(alerts_grouped_by_user_id)
@@ -88,7 +88,7 @@ def send_messages(version):
                 endpoint_info_by_id,
                 title_message_format,
                 body_message_format,
-                'reminder',
+                alert_type,
                 version
             )
 
