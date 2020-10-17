@@ -8,9 +8,11 @@ from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
 from lbshared.queries import convert_numbered_args
 from pypika import PostgreSQLQuery as Query, Table, Parameter, Interval, Not
-from pypika.functions import Max, Min, Count, Now, Function, Floor
+from pypika.functions import Max, Min, Count, Now, Floor
 from lbshared.pypika_crits import ExistsCriterion as Exists
-from datetime import datetime, timedelta
+from lbshared.pypika_funcs import DatePart
+from datetime import datetime
+from .utils import sleep_until_hour_and_minute
 import utils.reddit_proxy
 import time
 
@@ -49,11 +51,6 @@ class EndpointInfoForAlert:
         self.verb = verb
         self.deprecated_on = deprecated_on
         self.sunsets_on = sunsets_on
-
-
-class DatePart(Function):
-    def __init__(self, part, expr):
-        super(DatePart, self).__init__('DATE_PART', part, expr)
 
 
 def main():
@@ -509,17 +506,3 @@ def send_alerts_for_user(
             'body': body
         }
     )
-
-
-def sleep_until_hour_and_minute(hour, minute):
-    curtime = datetime.now()
-    target_time = datetime(
-        year=curtime.year,
-        month=curtime.month,
-        day=curtime.day,
-        hour=hour,
-        minute=minute
-    )
-    if curtime.hour > hour or curtime.hour == hour and curtime.minute >= minute:
-        target_time += timedelta(days=1)
-    time.sleep(target_time.timestamp() - time.time())
