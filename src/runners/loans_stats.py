@@ -153,7 +153,7 @@ def update_stats():
                         all_keys.add(key)
 
         categories = sorted(all_keys)
-        categories_pretty = [f'{year}-{month}' for (year, month) in categories]
+        categories_pretty = [f'{int(year)}-{int(month)}' for (year, month) in categories]
         for unit_dict in plots.values():
             for plot in unit_dict.values():
                 plot['data']['categories'] = categories_pretty
@@ -181,7 +181,7 @@ def update_stats():
         quarterly_categories = []
         for (year, month) in categories:
             quarter = map_month_to_quarter(month)
-            pretty_quarter = f'{year}Q{quarter}'
+            pretty_quarter = f'{int(year)}Q{quarter}'
             if not quarterly_categories or quarterly_categories[-1] != pretty_quarter:
                 quarterly_categories.append(pretty_quarter)
 
@@ -200,7 +200,7 @@ def update_stats():
             unit_dict['quarterly'] = quarterly_plot
 
             for series in monthly_plot['data']['series']:
-                quartlery_series = []
+                quartlery_series = quarterly_plot['data']['series']
                 last_year_and_quarter = None
                 for idx, (year, month) in enumerate(categories):
                     quarter = map_month_to_quarter(month)
