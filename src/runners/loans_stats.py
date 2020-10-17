@@ -45,10 +45,7 @@ def update_stats():
                 }
             }
             for style in ('lent', 'repaid', 'unpaid'):
-                plots[unit][frequency]['data']['series'][style] = {
-                    'name': style.title(),
-                    'data': {}  # Will be listified later
-                }
+                plots[unit][frequency]['data']['series'][style] = {}
 
         loans = Table('loans')
         moneys = Table('moneys')
