@@ -201,7 +201,10 @@ def update_stats():
 
             for series in monthly_plot['data']['series']:
                 quarterly_series = []
-                quarterly_plot['data']['series'].append(quarterly_series)
+                quarterly_plot['data']['series'].append({
+                    'name': series['name'],
+                    'data': quarterly_series
+                })
                 last_year_and_quarter = None
                 for idx, (year, month) in enumerate(categories):
                     quarter = map_month_to_quarter(month)
