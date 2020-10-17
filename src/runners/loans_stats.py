@@ -64,7 +64,7 @@ def update_stats():
             .select(
                 time_parts['year'],  # Which month are we counting?
                 time_parts['month'],   # Which year are we counting?
-                Count(Star),  # Total # of Loans Lent In Interval
+                Count(Star()),  # Total # of Loans Lent In Interval
                 Sum(principals.amount_usd_cents)  # Total USD of Loans Lent In Interval
             )
             .groupby(time_parts['year'], time_parts['month'])
@@ -92,7 +92,7 @@ def update_stats():
             .select(
                 time_parts['year'],
                 time_parts['month'],
-                Count(Star),
+                Count(Star()),
                 Sum(principals.amount_usd_cents)
             )
             .groupby(time_parts['year'], time_parts['month'])
@@ -121,7 +121,7 @@ def update_stats():
             .select(
                 time_parts['year'],
                 time_parts['month'],
-                Count(Star),
+                Count(Star()),
                 Sum(principals.amount_usd_cents)
             )
             .groupby(time_parts['year'], time_parts['month'])
