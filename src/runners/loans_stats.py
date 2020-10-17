@@ -200,16 +200,17 @@ def update_stats():
             unit_dict['quarterly'] = quarterly_plot
 
             for series in monthly_plot['data']['series']:
-                quartlery_series = quarterly_plot['data']['series']
+                quarterly_series = []
+                quarterly_plot['data']['series'].append(quarterly_series)
                 last_year_and_quarter = None
                 for idx, (year, month) in enumerate(categories):
                     quarter = map_month_to_quarter(month)
                     year_and_quarter = (year, quarter)
                     if year_and_quarter == last_year_and_quarter:
-                        quartlery_series[-1] += series['data'][idx]
+                        quarterly_series[-1] += series['data'][idx]
                     else:
                         last_year_and_quarter = year_and_quarter
-                        quartlery_series.append(series['data'][idx])
+                        quarterly_series.append(series['data'][idx])
 
         # And finally we fill caches
         for unit, unit_dict in plots.items():
