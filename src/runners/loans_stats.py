@@ -206,10 +206,10 @@ def update_stats():
                     quarter = map_month_to_quarter(month)
                     year_and_quarter = (year, quarter)
                     if year_and_quarter == last_year_and_quarter:
-                        quartlery_series[-1] += series[idx]
+                        quartlery_series[-1] += series['data'][idx]
                     else:
                         last_year_and_quarter = year_and_quarter
-                        quartlery_series.append(series[idx])
+                        quartlery_series.append(series['data'][idx])
 
         # And finally we fill caches
         for unit, unit_dict in plots.items():
@@ -219,3 +219,5 @@ def update_stats():
                 itgs.logger.print(Level.TRACE, '{} -> {}', cache_key, jsonified)
                 encoded = jsonified.encode('utf-8')
                 itgs.cache.set(cache_key, encoded)
+
+        itgs.logger.print(Level.INFO, 'Successfully updated loans statistics')
