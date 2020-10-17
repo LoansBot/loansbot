@@ -61,6 +61,7 @@ def update_stats():
 
         query = (
             Query.from_(loans)
+            .joins(principals).on(principals.id == loans.principal_id)
             .select(
                 time_parts['year'],  # Which month are we counting?
                 time_parts['month'],   # Which year are we counting?
@@ -89,6 +90,7 @@ def update_stats():
 
         query = (
             Query.from_(loans)
+            .joins(principals).on(principals.id == loans.principal_id)
             .select(
                 time_parts['year'],
                 time_parts['month'],
@@ -118,6 +120,7 @@ def update_stats():
 
         query = (
             Query.from_(loans)
+            .joins(principals).on(principals.id == loans.principal_id)
             .select(
                 time_parts['year'],
                 time_parts['month'],
