@@ -19,7 +19,9 @@ def main():
 
     with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
+        # Close logger
 
+    with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
         itgs.channel.exchange_declare(
             'events',
             'topic'
