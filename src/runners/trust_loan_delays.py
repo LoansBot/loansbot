@@ -9,8 +9,9 @@ import lbshared.delayed_queue as delqueue
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 from pypika.functions import Count, Star
 from datetime import datetime
-import json
 import time
+from functools import partial
+from .utils import listen_event
 
 
 def main():
@@ -21,25 +22,11 @@ def main():
 
     with LazyIntegrations(logger_iden='runners/trust_loan_delays.py#main') as itgs:
         # Keeps as few connections alive as possible when not working
-        consumer_channel = itgs.amqp.channel()
-        consumer_channel.exchange_declare('events', 'topic')
-        queue_declare_result = consumer_channel.queue_declare('', exclusive=True)
-        queue_name = queue_declare_result.method.queue
-
-        consumer_channel.queue_bind(queue_name, 'events', 'loans.paid')
-        consumer = consumer_channel.consume(queue_name, inactivity_timeout=600)
-        for method_frame, props, body_bytes in consumer:
-            if method_frame is None:
-                continue
-            body_str = body_bytes.decode('utf-8')
-            body = json.loads(body_str)
-            handle_loan_paid(version, body)
-            consumer_channel.basic_ack(method_frame.delivery_tag)
-        consumer.cancel()
+        listen_event(itgs, 'loans.paid', partial(handle_loan_paid, version))
 
 
 def handle_loan_paid(version, body):
-    """Called when we detect that a loan was repaid. Checks ifor any loan
+    """Called when we detect that a loan was repaid. Checks for any loan
     delays and, if there are any, checks if they are triggered. If they
     are triggered this removes the loan delay and adds the lender to the
     trust queue.

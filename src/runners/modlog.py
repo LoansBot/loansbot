@@ -70,17 +70,17 @@ def handle_action(itgs, act):
         if username is None:
             itgs.logger.print(
                 Level.DEBUG,
-                'Found modlog action {} by /u/{} - which we expected to ' +
-                'have a key {} which would be the username for someone who ' +
-                'should have their permissions rechecked, but it did not have one',
+                'Found modlog action {} by /u/{} - which we expected to '
+                + 'have a key {} which would be the username for someone who '
+                + 'should have their permissions rechecked, but it did not have one',
                 act['action'], act['mod'], key
             )
         else:
             itgs.logger.print(
                 Level.INFO,
-                '/u/{} performed action {} toward /u/{}, so /u/{} will have ' +
-                'their permissions rechecked on their next interaction, rather ' +
-                'than relying on cached values.',
+                '/u/{} performed action {} toward /u/{}, so /u/{} will have '
+                + 'their permissions rechecked on their next interaction, rather '
+                + 'than relying on cached values.',
                 act['mod'], act['action'], username, username
             )
             perms.manager.flush_cache(itgs, username)
