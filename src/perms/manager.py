@@ -61,7 +61,7 @@ def fetch_info(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -> 
         rpversion (float): The version number to use when using the reddit proxy
 
     Returns:
-        None if the accoutn does not exist, othewise a dict with the following:
+        None if the account does not exist, othewise a dict with the following:
 
         karma (int): How much combined karma the user has
         account_created_at (float): UTC time in seconds the account was created

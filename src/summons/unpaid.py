@@ -10,6 +10,7 @@ from pypika.functions import Now
 import loan_format_helper
 from lblogging import Level
 from lbshared.responses import get_response
+import json
 
 PARSER = Parser(
     '$unpaid',
@@ -79,9 +80,22 @@ class UnpaidSummon(Summon):
                 .insert(
                     *[(Parameter('%s'), True) for _ in affected_pre]
                 )
+                .returning(loan_unpaid_events.id)
                 .get_sql(),
                 tuple(loan.id for loan in affected_pre)
             )
+            itgs.channel.exchange_declare(
+                'events',
+                'topic'
+            )
+            row = itgs.write_cursor.fetchone()
+            while row is not None:
+                itgs.channel.basic_publish(
+                    'events',
+                    'loans.unpaid',
+                    json.dumps({"loan_unpaid_event_id": row[0]})
+                )
+                row = itgs.write_cursor.fetchone()
 
             itgs.write_cursor.execute(
                 loan_format_helper.create_loans_query()
@@ -94,6 +108,7 @@ class UnpaidSummon(Summon):
             while row is not None:
                 affected_post.append(loan_format_helper.fetch_loan(row))
                 row = itgs.write_cursor.fetchone()
+
         else:
             affected_post = []
 
