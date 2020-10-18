@@ -8,7 +8,8 @@ import perms.manager
 import utils.reddit_proxy
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 import time
-import json
+from .utils import listen_event
+from functools import partial
 
 LOGGER_IDEN = 'runners/ban_unpaid.py'
 RPIDEN = 'ban_unpaid'
@@ -22,24 +23,7 @@ def main():
         # Close logger
 
     with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
-        itgs.channel.exchange_declare(
-            'events',
-            'topic'
-        )
-
-        consumer_channel = itgs.amqp.channel()
-        queue_declare_result = consumer_channel.queue_declare('', exclusive=True)
-        queue_name = queue_declare_result.method.queue
-        consumer_channel.queue_bind(queue_name, 'events', 'loans.unpaid')
-        consumer = consumer_channel.consume(queue_name, inactivity_timeout=600)
-        for method_frame, props, body_bytes in consumer:
-            if method_frame is None:
-                continue
-            body_str = body_bytes.decode('utf-8')
-            body = json.loads(body_str)
-            handle_loan_unpaid(version, body)
-            consumer_channel.basic_ack(method_frame.delivery_tag)
-        consumer.cancel()
+        listen_event(itgs, 'loans.unpaid', partial(handle_loan_unpaid, version))
 
 
 def handle_loan_unpaid(version, body):
