@@ -17,7 +17,7 @@ SUBPROCESSES = (
     'runners.comments', 'runners.modlog', 'runners.rechecks', 'runners.links',
     'runners.new_lender', 'runners.borrower_request', 'runners.default_permissions',
     'runners.trust_loan_delays', 'runners.deprecated_alerts', 'runners.loans_stats',
-    'runners.ban_unpaid',
+    'runners.ban_unpaid', 'runners.lender_loan'
 )
 
 
