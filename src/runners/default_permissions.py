@@ -5,10 +5,15 @@ from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
 from lbshared.pypika_crits import exists
 from pypika import PostgreSQLQuery as Query, Table, Parameter
+from .utils import listen_event
+from functools import partial
 import json
 import time
 import os
 
+
+LOGGER_IDEN = 'runners/default_permissions.py'
+"""The identifier for this runner in the logs"""
 
 DEFAULT_PERMISSIONS = tuple(os.getenv('DEFAULT_PERMISSIONS', '').split(','))
 """The list of permissions we grant to new users when they sign up"""
@@ -17,26 +22,11 @@ DEFAULT_PERMISSIONS = tuple(os.getenv('DEFAULT_PERMISSIONS', '').split(','))
 def main():
     version = time.time()
 
-    with LazyIntegrations(logger_iden='runners/default_permissions.py#main') as itgs:
+    with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
-    with LazyIntegrations(logger_iden='runners/default_permissions.py#main') as itgs:
-        # Keeps as few connections alive as possible when not working
-        consumer_channel = itgs.amqp.channel()
-        consumer_channel.exchange_declare('events', 'topic')
-        queue_declare_result = consumer_channel.queue_declare('', exclusive=True)
-        queue_name = queue_declare_result.method.queue
-
-        consumer_channel.queue_bind(queue_name, 'events', 'user.signup')
-        consumer = consumer_channel.consume(queue_name, inactivity_timeout=600)
-        for method_frame, props, body_bytes in consumer:
-            if method_frame is None:
-                continue
-            body_str = body_bytes.decode('utf-8')
-            body = json.loads(body_str)
-            handle_user_signup(version, body)
-            consumer_channel.basic_ack(method_frame.delivery_tag)
-        consumer.cancel()
+    with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
+        listen_event(itgs, 'user.signup', partial(handle_user_signup, version))
 
 
 def handle_user_signup(version, body):

@@ -13,16 +13,19 @@ import loan_format_helper
 from lbshared.responses import get_response
 import json
 
+LOGGER_IDEN = 'runners/links.py'
+"""The identifier for this runner in the logs"""
+
 
 def main():
     """Periodically scans for new links in relevant subreddits."""
     version = time.time()
 
-    with LazyIntegrations(logger_iden='runners/links.py#main') as itgs:
+    with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
     while True:
-        with LazyIntegrations(no_read_only=True, logger_iden='runners/links.py#main') as itgs:
+        with LazyIntegrations(no_read_only=True, logger_iden=LOGGER_IDEN) as itgs:
             try:
                 scan_for_links(itgs, version)
             except:  # noqa

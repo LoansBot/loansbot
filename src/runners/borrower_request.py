@@ -9,35 +9,23 @@ from pypika import Table, Parameter
 import utils.reddit_proxy
 import loan_format_helper
 import json
+from .utils import listen_event
 from lbshared.responses import get_response
 from lbshared.user_settings import get_settings
+from functools import partial
+
+LOGGER_IDEN = 'runners/borrower_request.py'
+"""THe identity we use with the logger"""
 
 
 def main():
     version = time.time()
 
-    with LazyIntegrations(logger_iden='runners/borrower_request.py#main') as itgs:
+    with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
-        itgs.channel.exchange_declare(
-            'events',
-            'topic'
-        )
-
-        consumer_channel = itgs.amqp.channel()
-        queue_declare_result = consumer_channel.queue_declare('', exclusive=True)
-        queue_name = queue_declare_result.method.queue
-
-        consumer_channel.queue_bind(queue_name, 'events', 'loans.request')
-        consumer = consumer_channel.consume(queue_name, inactivity_timeout=600)
-        for method_frame, props, body_bytes in consumer:
-            if method_frame is None:
-                continue
-            body_str = body_bytes.decode('utf-8')
-            body = json.loads(body_str)
-            handle_loan_request(version, body)
-            consumer_channel.basic_ack(method_frame.delivery_tag)
-        consumer.cancel()
+    with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
+        listen_event(itgs, 'loans.request', partial(handle_loan_request, version))
 
 
 def handle_loan_request(version, event):
