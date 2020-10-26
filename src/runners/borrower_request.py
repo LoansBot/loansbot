@@ -8,7 +8,6 @@ import time
 from pypika import Table, Parameter
 import utils.reddit_proxy
 import loan_format_helper
-import json
 from .utils import listen_event
 from lbshared.responses import get_response
 from lbshared.user_settings import get_settings

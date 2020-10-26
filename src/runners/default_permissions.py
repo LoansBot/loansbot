@@ -7,7 +7,6 @@ from lbshared.pypika_crits import exists
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 from .utils import listen_event
 from functools import partial
-import json
 import time
 import os
 

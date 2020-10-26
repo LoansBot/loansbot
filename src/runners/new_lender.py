@@ -9,7 +9,6 @@ from pypika.functions import Count
 from .utils import listen_event
 from functools import partial
 import utils.reddit_proxy
-import json
 from lbshared.responses import get_response
 
 LOGGER_IDEN = 'runners/new_lender.py'
