@@ -6,36 +6,23 @@ import time
 from lbshared.money import Money
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 from pypika.functions import Count
+from .utils import listen_event
+from functools import partial
 import utils.reddit_proxy
-import json
 from lbshared.responses import get_response
+
+LOGGER_IDEN = 'runners/new_lender.py'
+"""The identifier for this runner in the logs"""
 
 
 def main():
     version = time.time()
 
-    with LazyIntegrations(logger_iden='runners/new_lender.py#main') as itgs:
+    with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
-    with LazyIntegrations(logger_iden='runners/new_lender.py#main') as itgs:
-        # We want to keep as few connections open as possible since this is
-        # going to be super long-running. For this part we only need the amqp
-        # connection open.
-        consumer_channel = itgs.amqp.channel()
-        consumer_channel.exchange_declare('events', 'topic')
-        queue_declare_result = consumer_channel.queue_declare('', exclusive=True)
-        queue_name = queue_declare_result.method.queue
-
-        consumer_channel.queue_bind(queue_name, 'events', 'loans.create')
-        consumer = consumer_channel.consume(queue_name, inactivity_timeout=600)
-        for method_frame, props, body_bytes in consumer:
-            if method_frame is None:
-                continue
-            body_str = body_bytes.decode('utf-8')
-            body = json.loads(body_str)
-            handle_loan_create(version, body)
-            consumer_channel.basic_ack(method_frame.delivery_tag)
-        consumer.cancel()
+    with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
+        listen_event(itgs, 'loans.create', partial(handle_loan_create, version))
 
 
 def handle_loan_create(version, event):
@@ -86,8 +73,8 @@ def handle_loan_create(version, event):
             itgs.logger.print(
                 Level.TRACE,
                 (
-                    'Ignoring the loan by /u/{} to /u/{} - /u/{} has {} ' +
-                    'previous loans, so they are not new'
+                    'Ignoring the loan by /u/{} to /u/{} - /u/{} has {} '
+                    + 'previous loans, so they are not new'
                 ),
                 event['lender']['username'], event['borrower']['username'],
                 event['lender']['username'], num_previous_loans

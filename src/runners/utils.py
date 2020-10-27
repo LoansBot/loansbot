@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import time
 import json
+from lblogging import Level
 
 
 def sleep_until_hour_and_minute(hour, minute):
@@ -41,6 +42,13 @@ def listen_event(itgs, event_name, handler):
             continue
         body_str = body_bytes.decode('utf-8')
         body = json.loads(body_str)
-        handler(body)
+
+        try:
+            handler(body)
+        except:  # noqa
+            itgs.logger.exception(Level.ERROR)
+            consumer_channel.basic_nack(method_frame.delivery_tag, requeue=False)
+            break
+
         consumer_channel.basic_ack(method_frame.delivery_tag)
     consumer.cancel()

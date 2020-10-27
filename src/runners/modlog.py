@@ -12,6 +12,7 @@ from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
 from lblogging import Level
 
 
+LOGGER_IDEN = 'runners/modlog.py'
 MOST_RECENT_ACTION_SEEN_KEY = 'loansbot_runners_modlog_last_action_at'
 PERMS_RELATED_ACTIONS = {
     'banuser': ('target_author',),
@@ -28,11 +29,11 @@ def main():
     need their permissions cache flushed. This avoids permission checking
     scaling extremely poorly as there are more unique users"""
     version = time.time()
-    with LazyItgs(logger_iden='runners/modlog.py#main') as itgs:
+    with LazyItgs(logger_iden=LOGGER_IDEN) as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up, version = {}', version)
 
     while True:
-        with LazyItgs(logger_iden='runners/modlog.py#main') as itgs:
+        with LazyItgs(logger_iden=LOGGER_IDEN) as itgs:
             scan_for_modactions(itgs, version)
         time.sleep(3600)
 
