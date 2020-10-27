@@ -58,9 +58,9 @@ def handle_user_signup(version, body):
         if row is None:
             itgs.logger.print(
                 Level.WARN,
-                'Race condition detected! Got user signup event for user id {} ' +
-                'but that user is not in the database. They will not receive ' +
-                'the expected default permissions.',
+                'Race condition detected! Got user signup event for user id {} '
+                + 'but that user is not in the database. They will not receive '
+                + 'the expected default permissions.',
                 body['user_id']
             )
             return
@@ -79,9 +79,9 @@ def handle_user_signup(version, body):
         if row is None:
             itgs.logger.print(
                 Level.WARN,
-                'Race condition detected! Got user signup event for user id {} ' +
-                'which corresponds to user /u/{} but that user does not have a ' +
-                'password set! They will not get the default permissions.',
+                'Race condition detected! Got user signup event for user id {} '
+                + 'which corresponds to user /u/{} but that user does not have a '
+                + 'password set! They will not get the default permissions.',
                 body['user_id'], username
             )
             return

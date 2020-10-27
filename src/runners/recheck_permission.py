@@ -109,7 +109,6 @@ def handle_loan_paid(version, event):
             )
             return
 
-        usrs = Table('users')
         loans = Table('loans')
         itgs.read_cursor.execute(
             Query.from_(loans)

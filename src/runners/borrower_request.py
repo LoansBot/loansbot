@@ -58,8 +58,8 @@ def handle_loan_request(version, event):
         if author_user_id is None:
             itgs.logger.print(
                 Level.TRACE,
-                'Ignoring loan request from /u/{} - they do not have any ' +
-                'outstanding loans (no history)',
+                'Ignoring loan request from /u/{} - they do not have any '
+                + 'outstanding loans (no history)',
                 post['author']
             )
             return
@@ -94,9 +94,9 @@ def handle_loan_request(version, event):
         unique_lenders = frozenset(loan['lender_id'] for loan in outstanding_borrowed_loans)
         itgs.logger.print(
             Level.INFO,
-            '/u/{} made a loan request while they have {} open loans from ' +
-            '{} unique lenders: {}. Going to inform each lender which has not ' +
-            'opted out of borrower request pms.',
+            '/u/{} made a loan request while they have {} open loans from '
+            + '{} unique lenders: {}. Going to inform each lender which has not '
+            + 'opted out of borrower request pms.',
             post['author'], len(outstanding_borrowed_loans), len(unique_lenders),
             unique_lenders
         )

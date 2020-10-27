@@ -73,8 +73,8 @@ def handle_loan_create(version, event):
             itgs.logger.print(
                 Level.TRACE,
                 (
-                    'Ignoring the loan by /u/{} to /u/{} - /u/{} has {} ' +
-                    'previous loans, so they are not new'
+                    'Ignoring the loan by /u/{} to /u/{} - /u/{} has {} '
+                    + 'previous loans, so they are not new'
                 ),
                 event['lender']['username'], event['borrower']['username'],
                 event['lender']['username'], num_previous_loans
