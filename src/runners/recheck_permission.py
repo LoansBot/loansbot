@@ -10,6 +10,8 @@ from pypika.terms import Star
 from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
 from lblogging import Level
 from .utils import listen_event
+import utils.reddit_proxy
+from lbshared.responses import get_letter_response
 from functools import partial
 import time
 
@@ -175,4 +177,19 @@ def handle_loan_paid(version, event):
             'Granted /u/{} access to recheck permission - signed up and has '
             '{} loans completed as lender (threshold is {})',
             lender_username, num_loans_compl_as_lender, MINIMUM_COMPLETED_LOANS
+        )
+
+        (subject, body) = get_letter_response(
+            itgs,
+            'user_granted_recheck_pm',
+            username=lender_username
+        )
+
+        utils.reddit_proxy.send_request(
+            itgs, 'recheck_permission', version, 'compose',
+            {
+                'recipient': lender_username,
+                'subject': subject,
+                'body': body
+            }
         )
