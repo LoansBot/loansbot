@@ -25,7 +25,7 @@ def main():
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
     with LazyItgs(logger_iden=LOGGER_IDEN) as itgs:
-        listen_event_with_itgs(itgs, 'modlog.*', handle_action, keep_alive=10)
+        listen_event_with_itgs(itgs, 'modlog.*', handle_action, keepalive=10)
 
 
 def handle_action(itgs, act):
