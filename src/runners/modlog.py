@@ -14,11 +14,11 @@ import json
 
 LOGGER_IDEN = 'runners/modlog.py'
 MOST_RECENT_ACTION_SEEN_KEY = 'loansbot_runners_modlog_last_action_at'
-PRODUCER_ACTIONS = frozenset(
+PRODUCER_ACTIONS = frozenset((
     'banuser', 'unbanuser',
     'acceptmoderatorinvite', 'removemoderator',
     'addcontributor', 'removecontributor'
-)
+))
 
 
 def main():
