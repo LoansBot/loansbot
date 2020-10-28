@@ -7,21 +7,18 @@ unapproved, banned, or unbanned we flush their permissions cache.
 import time
 import os
 import utils.reddit_proxy
-import perms.manager
 from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
 from lblogging import Level
+import json
 
 
 LOGGER_IDEN = 'runners/modlog.py'
 MOST_RECENT_ACTION_SEEN_KEY = 'loansbot_runners_modlog_last_action_at'
-PERMS_RELATED_ACTIONS = {
-    'banuser': ('target_author',),
-    'unbanuser': ('target_author',),
-    'acceptmoderatorinvite': ('mod',),
-    'removemoderator': ('target_author',),
-    'addcontributor': ('target_author',),
-    'removecontributor': ('target_author',)
-}
+PRODUCER_ACTIONS = frozenset(
+    'banuser', 'unbanuser',
+    'acceptmoderatorinvite', 'removemoderator',
+    'addcontributor', 'removecontributor'
+)
 
 
 def main():
@@ -34,7 +31,13 @@ def main():
 
     while True:
         with LazyItgs(logger_iden=LOGGER_IDEN) as itgs:
+            itgs.channel.exchange_declare(
+                'events',
+                'topic'
+            )
+
             scan_for_modactions(itgs, version)
+
         time.sleep(3600)
 
 
@@ -65,26 +68,14 @@ def scan_for_modactions(itgs: LazyItgs, version: float):
 
 
 def handle_action(itgs, act):
-    keys = PERMS_RELATED_ACTIONS.get(act['action'], tuple())
-    for key in keys:
-        username = act.get(key)
-        if username is None:
-            itgs.logger.print(
-                Level.DEBUG,
-                'Found modlog action {} by /u/{} - which we expected to '
-                + 'have a key {} which would be the username for someone who '
-                + 'should have their permissions rechecked, but it did not have one',
-                act['action'], act['mod'], key
-            )
-        else:
-            itgs.logger.print(
-                Level.INFO,
-                '/u/{} performed action {} toward /u/{}, so /u/{} will have '
-                + 'their permissions rechecked on their next interaction, rather '
-                + 'than relying on cached values.',
-                act['mod'], act['action'], username, username
-            )
-            perms.manager.flush_cache(itgs, username)
+    if act['action'] not in PRODUCER_ACTIONS:
+        return
+
+    itgs.channel.basic_publish(
+        'events',
+        'modlog.' + act['action'],
+        json.dumps(act)
+    )
 
 
 def _fetch_actions(itgs, version, after=None):
