@@ -64,7 +64,6 @@ def scan_for_modactions(itgs: LazyItgs, version: float):
                 new_last_seen = act['created_utc']
             else:
                 finished = True
-                break
 
     if new_last_seen is not None:
         itgs.cache.set(MOST_RECENT_ACTION_SEEN_KEY, str(new_last_seen))
