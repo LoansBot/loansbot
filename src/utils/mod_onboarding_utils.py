@@ -112,7 +112,7 @@ def grant_mod_permissions(itgs: 'LazyItgs', user_id: int, passwd_auth_id: int, c
     )
 
 
-def revoke_mod_permissions(itgs: LazyItgs, user_id: int, commit=False):
+def revoke_mod_permissions(itgs: 'LazyItgs', user_id: int, commit=False):
     """This function revokes all non-default permissions on the given user
     because they are no longer a moderator. This will apply to all
     authentication methods and will log them out. This will handle updating the
