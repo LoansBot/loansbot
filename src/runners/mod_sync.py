@@ -31,7 +31,7 @@ def main():
 
         with LazyItgs(logger_iden=LOGGER_IDEN) as itgs:
             sync_moderators_with_poll_and_diff(version, itgs)
-            _set_last_check_at(the_time)
+            _set_last_check_at(itgs, the_time)
             last_check_at = the_time
 
 
