@@ -1,5 +1,6 @@
 """Utility functions for granting and revoking permissions"""
 from pypika import PostgreSQLQuery as Query, Table, Parameter
+import query_helper
 import typing
 
 if typing.TYPE_CHECKING:
@@ -45,12 +46,13 @@ def grant_permissions(
     )
     passwd_auth_events = Table('password_authentication_events')
 
+    loansbot_user_id = get_loansbot_user_id(itgs)
     args = []
     for perm_id in perm_ids_to_grant:
         args.append(passwd_auth_id)
         args.append('permission-granted')
         args.append(reason)
-        args.append(user_id)
+        args.append(loansbot_user_id)
         args.append(perm_id)
 
     itgs.write_cursor.execute(
@@ -101,6 +103,15 @@ def revoke_permissions(
         (passwd_auth_id, *perm_ids_to_revoke)
     )
     passwd_auth_events = Table('password_authentication_events')
+    loansbot_user_id = get_loansbot_user_id(itgs)
+    args = []
+    for perm_id in perm_ids_to_revoke:
+        args.append(passwd_auth_id)
+        args.append('permission-revoked')
+        args.append(reason)
+        args.append(loansbot_user_id)
+        args.append(perm_id)
+
     itgs.write_cursor.execute(
         Query.into(passwd_auth_events)
         .columns(
@@ -112,10 +123,12 @@ def revoke_permissions(
         )
         .insert(
             *(
-                (passwd_auth_id, 'permission-revoked', reason, user_id, perm_id)
-                for perm_id in perm_ids_to_revoke
+                tuple(Parameter('%s') for _ in range(5))
+                for _ in perm_ids_to_revoke
             )
         )
+        .get_sql(),
+        args
     )
     authtokens = Table('authtokens')
     itgs.write_cursor.execute(
@@ -127,3 +140,38 @@ def revoke_permissions(
     )
     if commit:
         itgs.write_conn.commit()
+
+
+def get_loansbot_user_id(itgs: 'LazyItgs') -> int:
+    """This function returns the id of the loansbot user. If they do not exist
+    they are created. This is useful since thats the "author" of automated
+    permission changes.
+
+    Arguments:
+    - `itgs (LazyItgs)`: The integrations for connecting to networked
+        services.
+
+    Returns:
+    - `loansbot_user_id (int)`: The id of the loansbot user.
+    """
+    users = Table('users')
+    unm = 'loansbot'
+    (user_id,) = query_helper.find_or_create_or_find(
+        itgs,
+        (
+            Query.from_(users)
+            .select(users.id)
+            .where(users.username == Parameter('%s'))
+            .get_sql(),
+            (unm,)
+        ),
+        (
+            Query.into(users)
+            .columns(users.username)
+            .insert(Parameter('%s'))
+            .returning(users.id)
+            .get_sql(),
+            (unm,)
+        )
+    )
+    return user_id
