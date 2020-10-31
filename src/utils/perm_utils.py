@@ -25,6 +25,12 @@ def grant_permissions(
       to.
     """
     passwd_auth_perms = Table('password_auth_permissions')
+
+    args = []
+    for perm_id in perm_ids_to_grant:
+        args.append(passwd_auth_id)
+        args.append(perm_id)
+
     itgs.write_cursor.execute(
         Query.into(passwd_auth_perms)
         .columns(
@@ -35,10 +41,7 @@ def grant_permissions(
             *((Parameter('%s'), Parameter('%s')) for _ in perm_ids_to_grant)
         )
         .get_sql(),
-        tuple(
-            (passwd_auth_id, perm_id)
-            for perm_id in perm_ids_to_grant
-        )
+        args
     )
     passwd_auth_events = Table('password_authentication_events')
     itgs.write_cursor.execute(
