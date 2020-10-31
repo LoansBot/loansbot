@@ -7,7 +7,7 @@ if typing.TYPE_CHECKING:
 
 
 def grant_permissions(
-        itgs: LazyItgs, user_id: int, reason: str, passwd_auth_id: int,
+        itgs: 'LazyItgs', user_id: int, reason: str, passwd_auth_id: int,
         perm_ids_to_grant: list, commit=False):
     """Grants all of the given permissions to the given user. The permissions
     to grant must not already be on the user. You must provide the password
@@ -62,7 +62,7 @@ def grant_permissions(
 
 
 def revoke_permissions(
-        itgs: LazyItgs, user_id: int, reason: str, passwd_auth_id: int,
+        itgs: 'LazyItgs', user_id: int, reason: str, passwd_auth_id: int,
         perm_ids_to_revoke: list, commit=False):
     """Revokes all the given permissions from the given password authentication
     id. The password authentication must have all of the permissions. This will
