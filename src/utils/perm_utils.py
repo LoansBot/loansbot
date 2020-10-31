@@ -98,7 +98,11 @@ def revoke_permissions(
     itgs.write_cursor.execute(
         Query.from_(passwd_auth_perms).delete()
         .where(passwd_auth_perms.password_authentication_id == Parameter('%s'))
-        .where(passwd_auth_perms.permission_id.isin(*(Parameter('%s') for _ in perm_ids_to_revoke)))
+        .where(
+            passwd_auth_perms.permission_id.isin(
+                tuple(Parameter('%s') for _ in perm_ids_to_revoke)
+            )
+        )
         .get_sql(),
         (passwd_auth_id, *perm_ids_to_revoke)
     )
