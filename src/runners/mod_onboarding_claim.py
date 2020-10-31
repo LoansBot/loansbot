@@ -54,7 +54,7 @@ def handle_account_claimed(version, event):
         )
         (username,) = itgs.read_cursor.fetchone()
 
-        itgs.logger.rpint(
+        itgs.logger.print(
             Level.TRACE,
             'Detected that user {} is /u/{}',
             event['user_id'], username
