@@ -62,7 +62,12 @@ def grant_permissions(
             passwd_auth_events.user_id,
             passwd_auth_events.permission_id
         )
-        .insert(*(tuple(Parameter('%s') for _ in range(5)) for _ in range(perm_ids_to_grant)))
+        .insert(
+            *(
+                tuple(Parameter('%s') for _ in range(5))
+                for _ in perm_ids_to_grant
+            )
+        )
         .get_sql(),
         args
     )
