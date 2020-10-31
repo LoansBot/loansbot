@@ -43,7 +43,7 @@ def handle_action(act):
                 )
         elif act['action'] == 'removemoderator':
             lost_mod_username = act['target_author']
-            user_id = _find_or_create_user(itgs, new_mod_username)
+            user_id = _find_or_create_user(itgs, lost_mod_username)
             if _is_mod(itgs, user_id):
                 _rem_mod(itgs, user_id, commit=True)
                 itgs.logger.info(
