@@ -153,7 +153,7 @@ def revoke_mod_permissions(itgs: 'LazyItgs', user_id: int, commit=False):
             query = (
                 query
                 .join(permissions).on(permissions.id == passwd_auth_perms.permission_id)
-                .where(permissions.name.notin(*(Parameter('%s') for _ in DEFAULT_PERMISSIONS)))
+                .where(permissions.name.notin(tuple(Parameter('%s') for _ in DEFAULT_PERMISSIONS)))
             )
 
         itgs.read_cursor.execute(
