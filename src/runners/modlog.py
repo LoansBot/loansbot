@@ -25,6 +25,9 @@ def main():
     """Periodically scans the moderator log of /r/borrow to check if any users
     need their permissions cache flushed. This avoids permission checking
     scaling extremely poorly as there are more unique users"""
+    # Sleep a few seconds to ensure other runners are up and listening
+    time.sleep(5)
+
     version = time.time()
     with LazyItgs(logger_iden=LOGGER_IDEN) as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up, version = {}', version)
