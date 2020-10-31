@@ -44,6 +44,15 @@ def grant_permissions(
         args
     )
     passwd_auth_events = Table('password_authentication_events')
+
+    args = []
+    for perm_id in perm_ids_to_grant:
+        args.append(passwd_auth_id)
+        args.append('permission-granted')
+        args.append(reason)
+        args.append(user_id)
+        args.append(perm_id)
+
     itgs.write_cursor.execute(
         Query.into(passwd_auth_events)
         .columns(
@@ -53,12 +62,9 @@ def grant_permissions(
             passwd_auth_events.user_id,
             passwd_auth_events.permission_id
         )
-        .insert(
-            *(
-                (passwd_auth_id, 'permission-granted', reason, user_id, perm_id)
-                for perm_id in perm_ids_to_grant
-            )
-        )
+        .insert(*(tuple(Parameter('%s') for _ in range(5))))
+        .get_sql(),
+        args
     )
     if commit:
         itgs.write_conn.commit()
