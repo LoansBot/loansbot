@@ -16,7 +16,7 @@ DEFAULT_PERMISSIONS = tuple(os.getenv('DEFAULT_PERMISSIONS', '').split(','))
 """The list of permissions we grant to new users when they sign up"""
 
 
-def store_letter_message(itgs: LazyItgs, user_id: int, letter_name: str, commit=False):
+def store_letter_message(itgs: 'LazyItgs', user_id: int, letter_name: str, commit=False):
     """This function is responsible for storing that we sent an onboarding
     letter message to the given user, where the subject and body were
     fetched as if by `lbshared.responses.get_letter_response`
@@ -64,7 +64,7 @@ def store_letter_message(itgs: LazyItgs, user_id: int, letter_name: str, commit=
         itgs.write_conn.commit()
 
 
-def grant_mod_permissions(itgs: LazyItgs, user_id: int, passwd_auth_id: int, commit=False):
+def grant_mod_permissions(itgs: 'LazyItgs', user_id: int, passwd_auth_id: int, commit=False):
     """This function grants the given user all the permissions that moderators
     should have on the given password authentication id. This will handle
     updating the audit tables.
