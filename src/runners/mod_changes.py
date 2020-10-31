@@ -6,6 +6,8 @@ from lblogging import Level
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 from .utils import listen_event
 import query_helper
+import json
+
 
 LOGGER_IDEN = 'runners/mod_changes.py'
 INTERESTING_ACTIONS = frozenset(('acceptmoderatorinvite', 'removemoderator'))
@@ -37,7 +39,7 @@ def handle_action(act):
                 itgs.channel.basic_publish(
                     'events',
                     'mods.added',
-                    {'username': new_mod_username, 'user_id': user_id}
+                    json.dumps({'username': new_mod_username, 'user_id': user_id})
                 )
         elif act['action'] == 'removemoderator':
             lost_mod_username = act['target_author']
@@ -52,7 +54,7 @@ def handle_action(act):
                 itgs.channel.basic_publish(
                     'events',
                     'mods.removed',
-                    {'username': lost_mod_username, 'user_id': user_id}
+                    json.dumps({'username': lost_mod_username, 'user_id': user_id})
                 )
 
 

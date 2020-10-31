@@ -9,6 +9,7 @@ import utils.reddit_proxy
 import typing
 import time
 import os
+import json
 
 LOGGER_IDEN = 'runners/mod_sync.py'
 LAST_CHECK_AT_KEY = 'runners/mod_sync/last_check_at'
@@ -103,7 +104,7 @@ def sync_moderators_with_poll_and_diff(version: float, itgs: LazyItgs) -> None:
         itgs.channel.basic_publish(
             'events',
             'mods.removed',
-            {'username': removed_mod, 'user_id': removed_user_id}
+            json.dumps({'username': removed_mod, 'user_id': removed_user_id})
         )
 
     for added_mod in new_moderators:
@@ -127,7 +128,7 @@ def sync_moderators_with_poll_and_diff(version: float, itgs: LazyItgs) -> None:
         itgs.channel.basic_publish(
             'events',
             'mods.added',
-            {'username': added_mod, 'user_id': added_user_id}
+            json.dumps({'username': added_mod, 'user_id': added_user_id})
         )
 
 
