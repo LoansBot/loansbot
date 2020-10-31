@@ -70,7 +70,7 @@ def sync_moderators_with_poll_and_diff(version: float, itgs: LazyItgs) -> None:
         list(mods)
     )
 
-    removed_mods = [[r[0] for r in itgs.read_cursor.fetchall()]]
+    removed_mods = [r[0] for r in itgs.read_cursor.fetchall()]
 
     new_moderators = set(mods)
     itgs.read_cursor.execute(
@@ -93,12 +93,9 @@ def sync_moderators_with_poll_and_diff(version: float, itgs: LazyItgs) -> None:
             removed_mod
         )
         itgs.write_cursor.execute(
-            Query.from_(moderators)
-            .join(users).on(users.id == moderators.user_id)
-            .where(users.username == Parameter('%s'))
-            .delete()
-            .returning(users.id)
-            .get_sql(),
+            'DELETE FROM moderators '
+            'USING users '
+            'WHERE users.id = moderators.user_id AND users.username=%s RETURNING users.id',
             (removed_mod,)
         )
         (removed_user_id,) = itgs.write_cursor.fetchone()
