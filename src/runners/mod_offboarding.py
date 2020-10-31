@@ -6,7 +6,7 @@ from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
 from lblogging import Level
 from lbshared.responses import get_letter_response
 import utils.reddit_proxy
-import utils.revoke_mod_permissions
+import utils.mod_onboarding_utils
 from .utils import listen_event
 from functools import partial
 import time
