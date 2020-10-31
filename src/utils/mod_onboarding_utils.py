@@ -87,10 +87,11 @@ def grant_mod_permissions(itgs: 'LazyItgs', user_id: int, passwd_auth_id: int, c
                     Query.from_(passwd_auth_perms)
                     .where(passwd_auth_perms.password_authentication_id == Parameter('%s'))
                     .where(passwd_auth_perms.permission_id == permissions.id)
-                    .get_sql()
                 )
             )
         )
+        .get_sql(),
+        (passwd_auth_id,)
     )
     perm_ids_to_grant = []
     row = itgs.read_cursor.fetchone()
