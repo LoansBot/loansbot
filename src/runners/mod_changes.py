@@ -46,7 +46,7 @@ def handle_action(act):
             user_id = _find_or_create_user(itgs, lost_mod_username)
             if _is_mod(itgs, user_id):
                 _rem_mod(itgs, user_id, commit=True)
-                itgs.logger.info(
+                itgs.logger.print(
                     Level.INFO,
                     'Detected that /u/{} is no longer a moderator',
                     lost_mod_username
