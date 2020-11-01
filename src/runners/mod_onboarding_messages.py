@@ -88,7 +88,7 @@ def send_messages(version):
                         mod_onboarding_messages.msg_order > Parameter('%s')
                     )
                 )
-                .orderby(mod_onboarding_messages.msg_order, Order.asc)
+                .orderby(mod_onboarding_messages.msg_order, order=Order.asc)
                 .limit(1)
                 .get_sql(),
                 (cur_msg_order, cur_msg_order,)
