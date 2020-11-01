@@ -63,6 +63,8 @@ def send_messages(version):
                     mod_onboarding_progress.msg_order < Parameter('%s')
                 )
             )
+            .get_sql(),
+            (max_msg_order,)
         )
         rows = itgs.read_cursor.fetchall()
 
