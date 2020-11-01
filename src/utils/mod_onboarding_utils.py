@@ -45,7 +45,34 @@ def store_letter_message(itgs: 'LazyItgs', user_id: int, letter_name: str, commi
         raise Exception(f'expected 2 rows for letter base {letter_name}, got {len(rows)}')
 
     (body_id, title_id) = [r[0] for r in sorted(rows, key=lambda x: x[1])]
+    store_letter_message_with_id_and_names(
+        itgs, user_id, title_id, title_name,
+        body_id, body_name, commit=commit
+    )
 
+
+def store_letter_message_with_id_and_names(
+        itgs: 'LazyItgs', user_id: int,
+        title_id: int, title_name: str,
+        body_id: int, body_name: str,
+        commit=False):
+    """Similar to store_letter_message except this assumes you already know the
+    response information that was sent, ie., the id of the row in responses and
+    the name of the response.
+
+    Arguments:
+    - `itgs (LazyItgs)`: The integrations to use to connect to networked
+      components
+    - `user_id (int)`: The id of the user who we sent the message to
+    - `title_id (int)`: The ID of the title
+    - `title_name (str)`: The current name of the title, in case the title
+      response gets deleted.
+    - `body_id (int)`: The ID of the body
+    - `body_name (str)`: The current name of the body, in case the body
+      response gets deleted.
+    - `commit (bool)`: True to immediately commit the transaction, false not
+      to.
+    """
     mod_onboarding_msg_history = Table('mod_onboarding_msg_history')
     itgs.write_cursor.execute(
         Query.into(mod_onboarding_msg_history)
