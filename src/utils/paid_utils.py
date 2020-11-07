@@ -4,6 +4,7 @@ from pypika import PostgreSQLQuery as Query, Table, Parameter
 from pypika.functions import Now
 from lbshared.money import Money
 from lbshared.convert import convert
+import utils.money_utils
 import pytypeutils as tus
 import math
 import json
@@ -154,23 +155,11 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
             symbol_on_left=amount.symbol_on_left
         )
 
-    itgs.write_cursor.execute(
-        Query.into(moneys)
-        .columns(
-            moneys.currency_id,
-            moneys.amount,
-            moneys.amount_usd_cents
-        )
-        .insert(*[Parameter('%s') for _ in range(3)])
-        .returning(moneys.id)
-        .get_sql(),
-        (
-            loan_currency_id,
-            applied.minor,
-            applied_usd_cents
-        )
+    repayment_event_money_id = utils.money_utils.find_or_create_money(
+        itgs,
+        applied,
+        applied_usd_cents
     )
-    (repayment_event_money_id,) = itgs.write_cursor.fetchone()
 
     loan_repayment_events = Table('loan_repayment_events')
     itgs.write_cursor.execute(
@@ -191,13 +180,23 @@ def apply_repayment(itgs: LazyItgs, loan_id: int, amount: Money):
 
     new_princ_repayment_amount = principal_repayment_amount + applied.minor
     new_princ_repayment_usd_cents = int(math.ceil(new_princ_repayment_amount / rate_loan_to_usd))
+    new_princ_repayment_id = utils.money_utils.find_or_create_money(
+        itgs,
+        Money(
+            new_princ_repayment_amount,
+            loan_currency,
+            exp=loan_currency_exp,
+            symbol=loan_currency_symbol,
+            symbol_on_left=loan_currency_symbol_on_left
+        ),
+        new_princ_repayment_usd_cents
+    )
     itgs.write_cursor.execute(
-        Query.update(moneys)
-        .set(moneys.amount, new_princ_repayment_amount)
-        .set(moneys.amount_usd_cents, new_princ_repayment_usd_cents)
-        .where(moneys.id == Parameter('%s'))
+        Query.update(loans)
+        .set(loans.principal_repayment_id, Parameter('%s'))
+        .where(loans.id == Parameter('%s'))
         .get_sql(),
-        (principal_repayment_id,)
+        (new_princ_repayment_id, loan_id)
     )
 
     if new_princ_repayment_amount == principal_amount:
