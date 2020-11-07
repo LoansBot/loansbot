@@ -51,12 +51,20 @@ def scan_for_modactions(itgs: LazyItgs, version: float):
     if last_seen is not None:
         last_seen = float(last_seen)
 
+    # Seen afters is just paranoia in case reddit gets stuck in a loop.
+    seen_afters = set()
+
     new_last_seen = last_seen
     finished = False
     while not finished:
         actions, after = _fetch_actions(itgs, version, after)
+        if after is not None and after in seen_afters:
+            break
+
         if after is None:
             finished = True
+        else:
+            seen_afters.add(after)
 
         for act in actions:
             if last_seen is None or act['created_utc'] > last_seen:
