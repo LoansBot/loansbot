@@ -6,6 +6,7 @@ from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 import utils.reddit_proxy
+import query_helper
 import typing
 import time
 import os
@@ -113,17 +114,14 @@ def sync_moderators_with_poll_and_diff(version: float, itgs: LazyItgs) -> None:
             'Detected that /u/{} is now a moderator',
             added_mod
         )
+        added_user_id = _find_or_create_user(itgs, added_mod)
         itgs.write_cursor.execute(
             Query.into(moderators)
             .columns(moderators.user_id)
-            .from_(users)
-            .select(users.id)
-            .where(users.username == Parameter('%s'))
-            .returning(moderators.user_id)
+            .insert(Parameter('%s'))
             .get_sql(),
-            (added_mod,)
+            (added_user_id,)
         )
-        (added_user_id,) = itgs.write_cursor.fetchone()
         itgs.write_conn.commit()
         itgs.channel.basic_publish(
             'events',
@@ -142,3 +140,26 @@ def _get_last_check_at(itgs: LazyItgs) -> typing.Optional[float]:
 
 def _set_last_check_at(itgs: LazyItgs, new_last_check_at: float) -> None:
     itgs.cache.set(LAST_CHECK_AT_KEY, str(new_last_check_at))
+
+
+def _find_or_create_user(itgs: LazyItgs, unm: str) -> int:
+    users = Table('users')
+    (user_id,) = query_helper.find_or_create_or_find(
+        itgs,
+        (
+            Query.from_(users)
+            .select(users.id)
+            .where(users.username == Parameter('%s'))
+            .get_sql(),
+            (unm.lower(),)
+        ),
+        (
+            Query.into(users)
+            .columns(users.username)
+            .insert(Parameter('%s'))
+            .returning(users.id)
+            .get_sql(),
+            (unm.lower(),)
+        )
+    )
+    return user_id
