@@ -5,7 +5,7 @@ from lbshared.lazy_integrations import LazyIntegrations as LazyItgs
 from lblogging import Level
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 from .utils import listen_event
-import query_helper
+import utils.account_utils
 import json
 
 
@@ -28,7 +28,7 @@ def handle_action(act):
     with LazyItgs(logger_iden=LOGGER_IDEN) as itgs:
         if act['action'] == 'acceptmoderatorinvite':
             new_mod_username = act['mod']
-            user_id = _find_or_create_user(itgs, new_mod_username)
+            user_id = utils.account_utils.find_or_create_user(itgs, new_mod_username)
             if not _is_mod(itgs, user_id):
                 _add_mod(itgs, user_id, commit=True)
                 itgs.logger.print(
@@ -43,7 +43,7 @@ def handle_action(act):
                 )
         elif act['action'] == 'removemoderator':
             lost_mod_username = act['target_author']
-            user_id = _find_or_create_user(itgs, lost_mod_username)
+            user_id = utils.account_utils.find_or_create_user(itgs, lost_mod_username)
             if _is_mod(itgs, user_id):
                 _rem_mod(itgs, user_id, commit=True)
                 itgs.logger.print(
@@ -56,29 +56,6 @@ def handle_action(act):
                     'mods.removed',
                     json.dumps({'username': lost_mod_username, 'user_id': user_id})
                 )
-
-
-def _find_or_create_user(itgs: LazyItgs, unm: str) -> int:
-    users = Table('users')
-    (user_id,) = query_helper.find_or_create_or_find(
-        itgs,
-        (
-            Query.from_(users)
-            .select(users.id)
-            .where(users.username == Parameter('%s'))
-            .get_sql(),
-            (unm.lower(),)
-        ),
-        (
-            Query.into(users)
-            .columns(users.username)
-            .insert(Parameter('%s'))
-            .returning(users.id)
-            .get_sql(),
-            (unm.lower(),)
-        )
-    )
-    return user_id
 
 
 def _is_mod(itgs: LazyItgs, user_id: int) -> bool:

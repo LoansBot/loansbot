@@ -54,8 +54,8 @@ def handle_loan_request(version, event):
             .get_sql(),
             (post['author'].lower(),)
         )
-        (author_user_id,) = itgs.read_cursor.fetchone()
-        if author_user_id is None:
+        row = itgs.read_cursor.fetchone()
+        if row is None:
             itgs.logger.print(
                 Level.TRACE,
                 'Ignoring loan request from /u/{} - they do not have any '
@@ -63,6 +63,7 @@ def handle_loan_request(version, event):
                 post['author']
             )
             return
+        (author_user_id,) = row
 
         loans = Table('loans')
         itgs.read_cursor.execute(
