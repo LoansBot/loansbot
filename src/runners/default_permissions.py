@@ -98,7 +98,7 @@ def handle_user_signup(version, body):
         itgs.read_cursor.execute(
             Query.from_(perms)
             .select(perms.id)
-            .where(perms.name.isin(*(Parameter('%s') for _ in DEFAULT_PERMISSIONS)))
+            .where(perms.name.isin(tuple(Parameter('%s') for _ in DEFAULT_PERMISSIONS)))
             .get_sql(),
             DEFAULT_PERMISSIONS
         )
