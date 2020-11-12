@@ -14,9 +14,11 @@ class Parser:
     in order.
 
     Attributes:
-        anchor (str): A plain-text anchor for the start of the token. For
+        anchors (tuple[str]): A plain-text anchor for the start of the token. For
             example, the value '$check ' means we will only look for tokens
-            after the string literal '$check '.
+            after the string literal '$check '. May be specified as a single `str`
+            in the constructor to be interpreted as a list of just that string.
+            Anchors are attempted from lower to higher indexes.
         tokens (list): A list of tokens, where each token is actually a dict
             containing the following keys:
 
@@ -25,17 +27,23 @@ class Parser:
             optional (bool): Determines what should happen if this token isn't
                 matched at the expected point. If optional is true, the token
                 result will be set to None and parsing will continue.
-                Otherwise, if optinoal is false, parsing will stop.
+                Otherwise, if optional is false, parsing will stop.
     """
-    def __init__(self, anchor, tokens):
-        tus.check(anchor=(anchor, str), tokens=(tokens, (list, tuple)))
+    def __init__(self, anchors, tokens):
+        if isinstance(anchors, str):
+            anchors = (anchors,)
+
+        tus.check(anchors=(anchors, (list, tuple)), tokens=(tokens, (list, tuple)))
+        tus.check_listlike(anchors=(anchors, str))
+        if not anchors:
+            raise ValueError('at least one anchor must be specified')
         for idx, token in enumerate(tokens):
             tus.check(**{f'tokens_{idx}': (token, dict)})
             tus.check(**{
                 f'tokens_{idx}_token': (token['token'], Token),
                 f'tokens_{idx}_optional': (token['optional'], bool)
             })
-        self.anchor = anchor
+        self.anchors = anchors
         self.tokens = tokens
 
     def parse(self, text):
@@ -52,11 +60,16 @@ class Parser:
         """
         start_index = -1
         while True:
-            start_index = text.find(self.anchor, start_index + 1)
-            if start_index < 0:
+            anchor = None
+            for anch in self.anchors:
+                start_index = text.find(anch, start_index + 1)
+                if start_index >= 0:
+                    anchor = anch
+                    break
+            if anchor is None:
                 break
 
-            token_index = start_index + len(self.anchor)
+            token_index = start_index + len(anchor)
             result = []
             for token in self.tokens:
                 if token_index < len(text):

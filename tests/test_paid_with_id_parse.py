@@ -9,7 +9,7 @@ try:
     from summons.paid_with_id import PARSER
 except:  # noqa
     PARSER = Parser(
-        '$paid_with_id',
+        ('$paid_with_id', '$paid\\_with\\_id'),
         [
             {'token': parsing.ext_tokens.create_uint_token(), 'optional': False},
             {'token': parsing.ext_tokens.create_money_token(), 'optional': False}
