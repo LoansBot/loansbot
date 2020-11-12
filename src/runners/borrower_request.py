@@ -123,7 +123,7 @@ def handle_loan_request(version, event):
                 'borrower_request',
                 lender_username=pretty_loans[0].lender,
                 borrower_username=post['author'],
-                thread='https://reddit.com/r/{}/comments/{}/redditloans'.format(
+                thread='https://www.reddit.com/r/{}/comments/{}/redditloans'.format(
                     post['subreddit'], post['fullname'][3:]
                 ),
                 loans=loan_format_helper.format_loan_table(pretty_loans, include_id=True)

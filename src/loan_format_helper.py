@@ -614,7 +614,7 @@ def fetch_loan(row):
 
     permalink = None
     if creation_type == 0:
-        permalink = 'https://reddit.com/comments/{}/redditloans/{}'.format(
+        permalink = 'https://www.reddit.com/comments/{}/redditloans/{}'.format(
             creation_parent_fullname[3:],
             creation_comment_fullname[3:]
         )

@@ -13,7 +13,7 @@ from lbshared.responses import get_response
 
 
 PARSER = Parser(
-    '$paid_with_id',
+    ('$paid_with_id', '$paid\\_with\\_id'),
     [
         {'token': parsing.ext_tokens.create_uint_token(), 'optional': False},
         {'token': parsing.ext_tokens.create_money_token(), 'optional': False}
@@ -39,7 +39,7 @@ class PaidWithIdSummon(Summon):
         loan_id = token_vals[0]
         amt = token_vals[1]
 
-        comment_permalink = 'https://reddit.com/comments/{}/redditloans/{}'.format(
+        comment_permalink = 'https://www.reddit.com/comments/{}/redditloans/{}'.format(
             comment['link_fullname'][3:],
             comment['fullname'][3:]
         )
