@@ -14,10 +14,13 @@ import signal
 
 
 SUBPROCESSES = (
-    'runners.comments', 'runners.modlog', 'runners.rechecks', 'runners.links',
+    'runners.comments', 'runners.rechecks', 'runners.links',
     'runners.new_lender', 'runners.borrower_request', 'runners.default_permissions',
     'runners.trust_loan_delays', 'runners.deprecated_alerts', 'runners.loans_stats',
-    'runners.ban_unpaid', 'runners.lender_loan', 'runners.recheck_permission'
+    'runners.ban_unpaid', 'runners.lender_loan', 'runners.recheck_permission',
+    'runners.lender_queue_trusts', 'runners.modlog', 'runners.modlog_cache_flush',
+    'runners.mod_changes', 'runners.mod_offboarding', 'runners.mod_onboarding_claim',
+    'runners.mod_onboarding', 'runners.mod_sync', 'runners.mod_onboarding_messages',
 )
 
 

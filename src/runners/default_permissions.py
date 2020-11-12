@@ -3,9 +3,9 @@ the default permissions.
 """
 from lblogging import Level
 from lbshared.lazy_integrations import LazyIntegrations
-from lbshared.pypika_crits import exists
 from pypika import PostgreSQLQuery as Query, Table, Parameter
 from .utils import listen_event
+import utils.perm_utils
 from functools import partial
 import time
 import os
@@ -37,9 +37,7 @@ def handle_user_signup(version, body):
     - `body (dict)`: The event body. Has the following keys:
       - `user_id (int)`: The id of the user who just signed up.
     """
-    with LazyIntegrations(
-            logger_iden='runners/default_permissions.py#handle_user_signup',
-            no_read_only=True) as itgs:
+    with LazyIntegrations(logger_iden=LOGGER_IDEN, no_read_only=True) as itgs:
         itgs.logger.print(
             Level.TRACE,
             'Detected user signup: id={}',
@@ -88,37 +86,44 @@ def handle_user_signup(version, body):
 
         (passwd_auth_id,) = row
 
+        if not DEFAULT_PERMISSIONS:
+            itgs.logger.print(
+                Level.DEBUG,
+                'No default permissions -> nothing to do for /u/{}',
+                username
+            )
+            return
+
         perms = Table('permissions')
-        passwd_auth_perms = Table('password_auth_permissions')
-        passwd_auth_perms_inner = passwd_auth_perms.as_('pap_inner')
-        itgs.write_cursor.execute(
-            Query.into(passwd_auth_perms)
-            .columns(
-                passwd_auth_perms.password_authentication_id,
-                passwd_auth_perms.permission_id
-            )
-            .from_(perms)
-            .select(
-                Parameter('%s'),
-                perms.id
-            )
-            .where(perms.name.isin([Parameter('%s') for _ in DEFAULT_PERMISSIONS]))
-            .where(
-                exists(
-                    Query.from_(passwd_auth_perms_inner)
-                    .where(passwd_auth_perms_inner.password_authentication_id == Parameter('%s'))
-                    .where(passwd_auth_perms_inner.permission_id == perms.id)
-                )
-                .negate()
-            )
+        itgs.read_cursor.execute(
+            Query.from_(perms)
+            .select(perms.id)
+            .where(perms.name.isin(tuple(Parameter('%s') for _ in DEFAULT_PERMISSIONS)))
             .get_sql(),
-            (
-                passwd_auth_id,
-                *DEFAULT_PERMISSIONS,
-                passwd_auth_id
-            )
+            DEFAULT_PERMISSIONS
         )
-        itgs.write_conn.commit()
+
+        perm_ids_to_grant = []
+        row = itgs.read_cursor.fetchone()
+        while row is not None:
+            perm_ids_to_grant.append(row[0])
+            row = itgs.read_cursor.fetchone()
+
+        if len(perm_ids_to_grant) != len(DEFAULT_PERMISSIONS):
+            itgs.logger.print(
+                Level.WARN,
+                'DEFAULT_PERMISSIONS has {} entries ({}), but it only maps '
+                'to {} actual permissions ({})!',
+                len(DEFAULT_PERMISSIONS), DEFAULT_PERMISSIONS,
+                len(perm_ids_to_grant), perm_ids_to_grant
+            )
+            if not perm_ids_to_grant:
+                return
+
+        utils.perm_utils.grant_permissions(
+            itgs, body['user_id'], 'Default permissions on signup', passwd_auth_id,
+            perm_ids_to_grant, commit=True
+        )
 
         itgs.logger.print(
             Level.INFO,
