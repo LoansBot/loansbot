@@ -37,7 +37,7 @@ class UnpaidSummon(Summon):
         lender_username = comment['author']
         borrower_username = token_vals[0]
 
-        comment_permalink = 'https://reddit.com/comments/{}/redditloans/{}'.format(
+        comment_permalink = 'https://www.reddit.com/comments/{}/redditloans/{}'.format(
             comment['link_fullname'][3:],
             comment['fullname'][3:]
         )

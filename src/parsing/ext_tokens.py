@@ -17,7 +17,7 @@ def create_user_token():
         tkns.RegexToken(r'\A\s*/?u/(\w+)\s*', 1),
         tkns.RegexToken(
             r'\A\s*\[(?:/?u/)?(?P<username>\w+)\]'
-            + r'\(https?://reddit.com/u(?:ser)?/(?P=username)(?:\?[^\)]*)?(?:#[^\)]*)?\)\s*',
+            + r'\(https?://(www.)?reddit.com/u(?:ser)?/(?P=username)(?:\?[^\)]*)?(?:#[^\)]*)?\)\s*',
             1
         )
     ])

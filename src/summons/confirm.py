@@ -121,10 +121,10 @@ class ConfirmSummon(Summon):
                 amount=amt,
                 usd_amount=usd_amount,
                 loan_permalink=(
-                    'https://reddit.com'
+                    'https://www.reddit.com'
                     if parent_fullname is None
                     else
-                    'https://reddit.com/comments/{}/redditloans/{}'.format(
+                    'https://www.reddit.com/comments/{}/redditloans/{}'.format(
                         parent_fullname[3:], comment_fullname[3:]
                     )
                 ),
@@ -136,7 +136,7 @@ class ConfirmSummon(Summon):
             '/u/{} confirmed /u/{} sent him {} (matched loan: {}). Permalink: {}',
             borrower_username, lender_username, amt,
             'no' if row is None else f'yes, loan {loan_id}',
-            'https://reddit.com/comments/{}/redditloans/{}'.format(
+            'https://www.reddit.com/comments/{}/redditloans/{}'.format(
                 comment['link_fullname'][3:],
                 comment['fullname'][3:]
             )

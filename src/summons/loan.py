@@ -215,7 +215,7 @@ class LoanSummon(Summon):
         store_amount.symbol_on_left = db_currency_sym_on_left
 
         permalink = (
-            'https://reddit.com/comments/{}/redditloans/{}'.format(
+            'https://www.reddit.com/comments/{}/redditloans/{}'.format(
                 comment['link_fullname'][3:],
                 comment['fullname'][3:]
             )
