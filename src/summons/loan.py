@@ -241,7 +241,8 @@ class LoanSummon(Summon):
                 'loan_id': loan_id,
                 'comment': {
                     'link_fullname': comment['link_fullname'],
-                    'fullname': comment['fullname']
+                    'fullname': comment['fullname'],
+                    'subreddit': comment['subreddit']
                 },
                 'lender': {'id': lender_user_id, 'username': lender_username},
                 'borrower': {'id': borrower_user_id, 'username': borrower_username},
