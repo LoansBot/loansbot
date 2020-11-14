@@ -21,6 +21,7 @@ SUBPROCESSES = (
     'runners.lender_queue_trusts', 'runners.modlog', 'runners.modlog_cache_flush',
     'runners.mod_changes', 'runners.mod_offboarding', 'runners.mod_onboarding_claim',
     'runners.mod_onboarding', 'runners.mod_sync', 'runners.mod_onboarding_messages',
+    'runners.flair_loan_threads_completed',
 )
 
 
