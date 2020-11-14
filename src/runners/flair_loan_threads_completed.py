@@ -15,8 +15,11 @@ LOGGER_IDEN = 'runners/flair_loan_threads_completed.py'
 RPIDEN = 'flair_loan_threads_completed'
 """The identifier we use to communicate to the reddit proxy"""
 
-CSS_CLASS = '991c8042-3ecc-11e4-8052-12313d05258a'
+CSS_CLASS = 'nolongerneeded'
 """The flair CSS class that we apply"""
+
+FLAIR_TEXT = 'Completed'
+"""The flair text we apply"""
 
 
 def main():
@@ -51,7 +54,12 @@ def handle_loan_created(version, body):
 
         utils.reddit_proxy.send_request(
             itgs, RPIDEN, version, 'flair_link',
-            {'subreddit': subreddit, 'link_fullname': link_fullname, 'css_class': CSS_CLASS}
+            {
+                'subreddit': subreddit,
+                'link_fullname': link_fullname,
+                'css_class': CSS_CLASS,
+                'text': FLAIR_TEXT
+            }
         )
 
         itgs.logger.print(
