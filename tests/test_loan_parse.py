@@ -48,6 +48,18 @@ class Test(unittest.TestCase):
             [money.Money(123, 'CAD'), None]
         )
 
+    def test_comma(self):
+        self.assertEqual(
+            PARSER.parse('$loan $1,000'),
+            [money.Money(100000, 'USD'), None]
+        )
+
+    def test_comma_and_period(self):
+        self.assertEqual(
+            PARSER.parse('$loan $1,000.00'),
+            [money.Money(100000, 'USD'), None]
+        )
+
     def test_convert(self):
         self.assertEqual(
             PARSER.parse('$loan 1.23 CAD AS JPY'),
