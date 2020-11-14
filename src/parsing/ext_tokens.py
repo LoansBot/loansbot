@@ -45,20 +45,21 @@ def create_money_token():
 
         exp = money.ISO_CODES_TO_EXP[iso]
         new_amount_regex = (
-            r'\A[0-9]+\Z' if exp == 0 else r'\A[0-9]+(?:\.[0-9]{' + str(exp) + r'})?\Z'
+            r'\A[0-9,]+\Z' if exp == 0 else r'\A[0-9,]+(?:\.[0-9]{' + str(exp) + r'})?\Z'
         )
         if not re.match(new_amount_regex, groups['amt']):
             return None
 
         # We manipulate the number as a string as it avoids floating point
         # rounding issues
+        groups['amt'] = groups['amt'].replace(',', '')
         if '.' in groups['amt']:
             return money.Money(int(groups['amt'].replace('.', '')), iso)
         return money.Money(int(groups['amt'] + ''.join(['0'] * exp)), iso)
 
     iso_codes = '|'.join(money.ISO_CODES_TO_EXP.keys())
     symbols = '|'.join([k if k != '$' else r'\$' for k in money.CURRENCY_SYMBOLS.keys()])
-    amount = r'[0-9]+(?:\.[0-9]{0,4})?'
+    amount = r'[0-9,]+(?:\.[0-9]{0,4})?'
     return tkns.TransformedToken(
         tkns.FallbackToken([
             tkns.RegexToken(
