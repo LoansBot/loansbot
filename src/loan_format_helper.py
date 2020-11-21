@@ -265,8 +265,8 @@ def get_all_loans(itgs: LazyIntegrations, username: str):
     return result
 
 
-def get_inprogress_loans(itgs: LazyIntegrations, username: str):
-    """Gets the list of inprogress loans for the given username. A loan is in
+def get_inprogress_loans_as_borrower(itgs: LazyIntegrations, username: str):
+    """Gets the list of inprogress loans for the given borrower. A loan is in
     progress if it has not been repaid and has not been marked unpaid. Often it's
     helpful to display these loans in a tabular format even if the other loans are
     in a summary format.
@@ -288,10 +288,7 @@ def get_inprogress_loans(itgs: LazyIntegrations, username: str):
 
     itgs.read_cursor.execute(
         create_loans_query()
-        .where(
-            (lenders.username == Parameter('%s'))
-            | (borrowers.username == Parameter('%s'))
-        )
+        .where(borrowers.username == Parameter('%s'))
         .where(loans.repaid_at.isnull())
         .where(loans.unpaid_at.isnull())
         .orderby(loans.created_at, order=Order.desc)
@@ -567,12 +564,7 @@ def get_and_format_all_or_summary(itgs: LazyIntegrations, username: str, thresho
     if cnt < threshold:
         return format_loan_table(get_all_loans(itgs, username))
 
-    formatted_summary = format_loan_summary(*get_summary_info(itgs, username))
-    formatted_inprogress = format_loan_table(get_inprogress_loans(itgs, username))
-
-    return '{}\n\n**Inprogress Loans:**\n\n{}\n'.format(
-        formatted_summary, formatted_inprogress
-    )
+    return format_loan_summary(*get_summary_info(itgs, username))
 
 
 def create_loans_query():
