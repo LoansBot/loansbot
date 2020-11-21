@@ -41,6 +41,7 @@ def handle_loan_unpaid(version, body):
             Query.from_(loan_unpaid_events)
             .join(loans).on(loans.id == loan_unpaid_events.loan_id)
             .join(borrowers).on(borrowers.id == loans.borrower_id)
+            .join(lenders).on(lenders.id == loans.lender_id)
             .select(borrowers.username, lenders.username)
             .where(loan_unpaid_events.id == Parameter('%s'))
             .get_sql(),
