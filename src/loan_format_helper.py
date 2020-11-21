@@ -265,6 +265,49 @@ def get_all_loans(itgs: LazyIntegrations, username: str):
     return result
 
 
+def get_inprogress_loans(itgs: LazyIntegrations, username: str):
+    """Gets the list of inprogress loans for the given username. A loan is in
+    progress if it has not been repaid and has not been marked unpaid. Often it's
+    helpful to display these loans in a tabular format even if the other loans are
+    in a summary format.
+
+    Example:
+        print(format_loan_table(get_inprogress_loans(itgs, username)))
+
+    Arguments:
+        username (str): The username of the user to get the loans involving.
+            A loan involves a user if they are the lender or the borrower.
+
+    Returns:
+        loans (List[Loan]): All the inprogress loans involving the user with
+            the given username.
+    """
+    loans = Table('loans')
+    lenders = Table('lenders')
+    borrowers = Table('borrowers')
+
+    itgs.read_cursor.execute(
+        create_loans_query()
+        .where(
+            (lenders.username == Parameter('%s'))
+            | (borrowers.username == Parameter('%s'))
+        )
+        .where(loans.repaid_at.isnull())
+        .where(loans.unpaid_at.isnull())
+        .orderby(loans.created_at, order=Order.desc)
+        .get_sql(),
+        (username.lower(), username.lower())
+    )
+    result = []
+
+    row = itgs.read_cursor.fetchone()
+    while row is not None:
+        result.append(fetch_loan(row))
+        row = itgs.read_cursor.fetchone()
+
+    return result
+
+
 def get_summary_info(itgs: LazyIntegrations, username: str, max_loans_per_table: int = 7):
     """Get all of the information for a loan summary for the given username in
     a reasonably performant way.
@@ -491,6 +534,9 @@ def get_and_format_all_or_summary(itgs: LazyIntegrations, username: str, thresho
     fetches all the loans for that user, formats it into a table, and returns
     the formatted table.
 
+    Note that when using the summary format this will include the users in-
+    progress loans as a table as well so they stand out.
+
     Arguments:
         itgs (LazyIntegrations): The integrations to use for getting info
         username (str): The username to check
@@ -520,7 +566,13 @@ def get_and_format_all_or_summary(itgs: LazyIntegrations, username: str, thresho
     (cnt,) = itgs.read_cursor.fetchone()
     if cnt < threshold:
         return format_loan_table(get_all_loans(itgs, username))
-    return format_loan_summary(*get_summary_info(itgs, username))
+
+    formatted_summary = format_loan_summary(*get_summary_info(itgs, username))
+    formatted_inprogress = format_loan_table(get_inprogress_loans(itgs, username))
+
+    return '{}\n\n**Inprogress Loans:**\n\n{}\n'.format(
+        formatted_summary, formatted_inprogress
+    )
 
 
 def create_loans_query():
