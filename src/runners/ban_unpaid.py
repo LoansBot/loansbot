@@ -27,6 +27,7 @@ def main():
 
 
 def handle_loan_unpaid(version, body):
+    time.sleep(5)  # give the transaction some time to complete
     loan_unpaid_event_id = body['loan_unpaid_event_id']
 
     with LazyIntegrations(logger_iden=LOGGER_IDEN) as itgs:
