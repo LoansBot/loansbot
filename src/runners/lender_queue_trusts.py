@@ -105,7 +105,7 @@ def handle_loan_paid(version, event):
         )
 
         utils.reddit_proxy.send_request(
-            itgs, 'recheck_permission', version, 'compose',
+            itgs, 'lender_queue_trusts', version, 'compose',
             {
                 'recipient': '/r/borrow',
                 'subject': subject,
