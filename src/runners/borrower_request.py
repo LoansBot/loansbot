@@ -132,7 +132,7 @@ def handle_loan_request(version, event):
             utils.reddit_proxy.send_request(
                 itgs, 'borrower_request', version, 'compose',
                 {
-                    'recipient': post['author'],
+                    'recipient': pretty_loans[0].lender,
                     'subject': '/u/{} has made a request thread'.format(post['author']),
                     'body': formatted_body
                 }
