@@ -56,6 +56,7 @@ def send_request(itgs: LazyItgs, iden: str, version: float, typ: str, args: dict
     )
 
     consumer = itgs.channel.consume(response_queue, inactivity_timeout=600)
+    start_time = time.time()
     for method_frame, properties, body_bytes in consumer:
         if method_frame is None:
             itgs.logger.print(
@@ -64,6 +65,13 @@ def send_request(itgs: LazyItgs, iden: str, version: float, typ: str, args: dict
                 msg_uuid, typ
             )
             itgs.logger.connection.commit()
+
+            if time.time() - start_time > 60 * 60 * 4:
+                itgs.logger.print(
+                    Level.ERROR,
+                    'Giving up on response for message {} (type={})', msg_uuid, typ
+                )
+                raise TimeoutError
             continue
 
         body_str = body_bytes.decode('utf-8')
