@@ -272,7 +272,7 @@ def get_inprogress_loans_as_borrower(itgs: LazyIntegrations, username: str):
     in a summary format.
 
     Example:
-        print(format_loan_table(get_inprogress_loans(itgs, username)))
+        print(format_loan_table(get_inprogress_loans_as_borrower(itgs, username)))
 
     Arguments:
         username (str): The username of the user to get the loans involving.
@@ -283,7 +283,6 @@ def get_inprogress_loans_as_borrower(itgs: LazyIntegrations, username: str):
             the given username.
     """
     loans = Table('loans')
-    lenders = Table('lenders')
     borrowers = Table('borrowers')
 
     itgs.read_cursor.execute(
