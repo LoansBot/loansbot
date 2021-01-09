@@ -108,7 +108,6 @@ class UnpaidSummon(Summon):
             while row is not None:
                 affected_post.append(loan_format_helper.fetch_loan(row))
                 row = itgs.write_cursor.fetchone()
-
         else:
             affected_post = []
 

@@ -14,9 +14,9 @@ def create_user_token():
     substituting /u/ with u/.
     """
     return tkns.FallbackToken([
-        tkns.RegexToken(r'\A\s*/?u/(\w+)\s*', 1),
+        tkns.RegexToken(r'\A\s*/?u/([\w-]+)\s*', 1),
         tkns.RegexToken(
-            r'\A\s*\[(?:/?u/)?(?P<username>\w+)\]'
+            r'\A\s*\[(?:/?u/)?(?P<username>[\w-]+)\]'
             + r'\(https?://(www.)?reddit.com/u(?:ser)?'
             + r'/(?P=username)/?(?:\?[^\)]*)?(?:#[^\)]*)?\)\s*',
             1
