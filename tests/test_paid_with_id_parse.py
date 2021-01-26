@@ -30,6 +30,11 @@ class Test(unittest.TestCase):
             [1, money.Money(200, 'USD')]
         )
 
+    def test_malformed(self):
+        self.assertIsNone(
+            PARSER.parse('$paid\\_with\\_id 91888')
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

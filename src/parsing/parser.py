@@ -60,14 +60,23 @@ class Parser:
         """
         start_index = -1
         while True:
-            anchor = None
+            best_anchor = None
+            best_start_index = None
+
             for anch in self.anchors:
-                start_index = text.find(anch, start_index + 1)
-                if start_index >= 0:
-                    anchor = anch
-                    break
-            if anchor is None:
+                anchor_start_index = text.find(anch, start_index + 1)
+                if anchor_start_index < 0:
+                    continue
+
+                if best_anchor is None or anchor_start_index < best_start_index:
+                    best_anchor = anch
+                    best_start_index = anchor_start_index
+
+            if best_anchor is None:
                 break
+
+            anchor = best_anchor
+            start_index = best_start_index
 
             token_index = start_index + len(anchor)
             result = []
