@@ -9,4 +9,4 @@ psycopg2==2.8.4
 pymemcache==3.0.0
 six==1.14.0
 pytypeutils==0.0.1
-pydantic==1.5.1
+pydantic==1.6.2
