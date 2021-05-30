@@ -51,6 +51,7 @@ def scan_for_expired_temp_bans(itgs: LazyIntegrations, version: float) -> None:
     while True:
         itgs.write_cursor.execute(
             Query.from_(temp_bans)
+            .join(users).on(users.id == temp_bans.user_id)
             .select(
                 temp_bans.id,
                 users.username,
