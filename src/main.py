@@ -21,7 +21,7 @@ SUBPROCESSES = (
     'runners.lender_queue_trusts', 'runners.modlog', 'runners.modlog_cache_flush',
     'runners.mod_changes', 'runners.mod_offboarding', 'runners.mod_onboarding_claim',
     'runners.mod_onboarding', 'runners.mod_sync', 'runners.mod_onboarding_messages',
-    'runners.flair_loan_threads_completed',
+    'runners.flair_loan_threads_completed', 'runners.temp_ban_expired_cache_flush',
 )
 
 
@@ -54,7 +54,7 @@ def main():
         itgs.logger.print(Level.DEBUG, 'Booting up..')
         for modnm in SUBPROCESSES:
             itgs.logger.print(Level.TRACE, 'Spawning subprocess {}', modnm)
-            proc = Process(target=subprocess_runner, args=(modnm,), daemon=True)
+            proc = Process(target=subprocess_runner, name=modnm, args=(modnm,), daemon=True)
             proc.start()
             subprocs.append(proc)
 
@@ -85,7 +85,7 @@ def main():
         for proc in subprocs:
             if not proc.is_alive():
                 with LazyIntegrations(logger_iden='main.py#main') as itgs:
-                    itgs.logger.print(Level.ERROR, 'A child process has died! Terminating...')
+                    itgs.logger.print(Level.ERROR, 'A child process has died ({})! Terminating...', proc.name)
                 running = False
                 break
         if not running:
