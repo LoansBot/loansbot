@@ -75,13 +75,14 @@ def scan_for_expired_temp_bans(itgs: LazyIntegrations, version: float) -> None:
             )
             flush_cache(itgs, username)
 
-        itgs.write_cursor.execute(
-            Query.from_(temp_bans).delete()
-            .where(temp_bans.id.isin([Parameter('%s') for _ in rows]))
-            .get_sql(),
-            [row[0] for row in rows]
-        )
-        itgs.write_conn.commit()
+        if rows:
+            itgs.write_cursor.execute(
+                Query.from_(temp_bans).delete()
+                .where(temp_bans.id.isin([Parameter('%s') for _ in rows]))
+                .get_sql(),
+                [row[0] for row in rows]
+            )
+            itgs.write_conn.commit()
 
         if len(rows) < limit_per_iteration:
             break
