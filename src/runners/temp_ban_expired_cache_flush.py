@@ -14,12 +14,13 @@ from lbshared.lazy_integrations import LazyIntegrations
 def main():
     """Periodically scans for expired temporary bans."""
     version = time.time()
+    logger_iden = 'runners/temp_ban_expired_cache_flush.py#main'
 
-    with LazyIntegrations(logger_iden='runners/temp_ban_expired_cache_flush.py#main') as itgs:
+    with LazyIntegrations(logger_iden=logger_iden) as itgs:
         itgs.logger.print(Level.DEBUG, 'Successfully booted up')
 
     while True:
-        with LazyIntegrations(no_read_only=True, logger_iden='runners/temp_ban_expired_cache_flush.py#main') as itgs:
+        with LazyIntegrations(no_read_only=True, logger_iden=logger_iden) as itgs:
             try:
                 scan_for_expired_temp_bans(itgs, version)
             except:  # noqa
