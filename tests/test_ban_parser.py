@@ -16,3 +16,9 @@ class Test(unittest.TestCase):
             parse_temporary_ban('5 days'),
             5 * 86400
         )
+
+    def test_simple_newstyle(self):
+        self.assertEqual(
+            parse_temporary_ban('Ban changed to 28 days'),
+            28 * 86400
+        )
