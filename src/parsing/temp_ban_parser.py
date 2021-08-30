@@ -24,16 +24,23 @@ ALLOWED_DURATIONS = {
 and the values are the duration multiple.
 """
 
-PARSE_REGEX = re.compile(r'(?P<cnt>\d+)\s+(?P<interval>\S+)')
-"""The regex to use for parsing temporary bans"""
+PARSE_REGEXES = [
+    re.compile(r'Ban changed to (?P<cnt>\d+)\s+(?P<interval>\S+)', re.IGNORECASE),
+    re.compile(r'(?P<cnt>\d+)\s+(?P<interval>\S+)')
+]
+"""The regexes to use for parsing temporary bans, in order of preference"""
 
 
 def parse_temporary_ban(details: str) -> float:
-    grp = PARSE_REGEX.match(details)
-    if grp is None:
+    for regex in PARSE_REGEXES:
+        grp = regex.match(details)
+        if grp is not None:
+            break
+    else:
         raise TempBanDetailsParseError(
-            f'invalid temporary ban details: {details} (does not match regex)'
+            f'invalid temporary ban details: {details} (does not match any regex)'
         )
+
 
     cnt = int(grp['cnt'])
     interval = grp['interval']
