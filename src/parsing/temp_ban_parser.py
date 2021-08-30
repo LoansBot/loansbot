@@ -41,7 +41,6 @@ def parse_temporary_ban(details: str) -> float:
             f'invalid temporary ban details: {details} (does not match any regex)'
         )
 
-
     cnt = int(grp['cnt'])
     interval = grp['interval']
 
