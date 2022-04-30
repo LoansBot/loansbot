@@ -83,6 +83,13 @@ def scan_for_comments(itgs, version):
 
         num_to_find = len(fullnames) - len(rows)
         seen_set = set(row[0] for row in rows)
+
+        itgs.logger.print(
+            Level.TRACE,
+            '[issue #59] New comments: {}',
+            ', '.join(c for c in fullnames if c not in seen_set)
+        )
+
         for comment in comments:
             if comment['fullname'] in seen_set:
                 continue
