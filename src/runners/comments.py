@@ -39,6 +39,12 @@ def scan_for_comments(itgs, version):
 
     handled_fullnames = Table('handled_fullnames')
 
+    itgs.logger.print(
+        Level.TRACE,
+        '[issue #59] Starting comment scan by fetching the first page of comments '
+        'from newest to oldest.'
+    )
+
     while True:
         comments, after = _fetch_comments(itgs, version, after)
 
@@ -47,6 +53,13 @@ def scan_for_comments(itgs, version):
             break
 
         fullnames = [comm['fullname'] for comm in comments]
+
+        itgs.logger.print(
+            Level.TRACE,
+            '[issue #59] Comments found: {}',
+            ', '.join(fullnames)
+        )
+
         itgs.read_cursor.execute(
             Query.from_(handled_fullnames)
             .select('fullname')
@@ -60,7 +73,14 @@ def scan_for_comments(itgs, version):
         itgs.logger.print(Level.TRACE, 'Found {} new comments', len(fullnames) - len(rows))
 
         if len(fullnames) == len(rows):
+            itgs.logger.print(
+                Level.TRACE,
+                '[issue #59] Since we have already seen all of these comments, we have '
+                'definitely seen at least one comment from this page. By induction, '
+                'we have also seen all older comments and can stop scanning.'
+            )
             break
+
         num_to_find = len(fullnames) - len(rows)
         seen_set = set(row[0] for row in rows)
         for comment in comments:
@@ -80,6 +100,23 @@ def scan_for_comments(itgs, version):
             num_to_find = num_to_find - 1
             if num_to_find <= 0:
                 break
+
+        if seen_set:
+            itgs.logger.print(
+                Level.TRACE,
+                '[issue #59] In theory, since we have seen at least one comment '
+                'from this page, we would expect to find no new comments on the '
+                'next older page by induction. We will nonetheless fetch the next '
+                'page (after={})',
+                after
+            )
+        else:
+            itgs.logger.print(
+                Level.TRACE,
+                '[issue #59] Since we have not seen any comments from this page, '
+                'we need to fetch the next page (after={})',
+                after
+            )
 
 
 def _fetch_comments(itgs, version, after=None):
