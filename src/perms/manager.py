@@ -96,7 +96,20 @@ def fetch_info(itgs: LazyItgs, username: str, rpiden: str, rpversion: float) -> 
             >= COMBINED_KARMA_MIN
         )
     ):
-        # If they earned 100 karma/day they would have enough karma by now
+        # If they earned 100 karma/day they would have enough combined karma by now
+        cache_hit = False
+
+    if (
+        cache_hit
+        and (time.time() - doc.body["checked_karma_at"]) > 60 * 60 * 24
+        and doc.body["comment_karma"] < COMMENT_KARMA_MIN
+        and (
+            doc.body["comment_karma"]
+            + (time.time() - doc.body["checked_karma_at"]) * 100 / (60 * 60 * 24)
+            >= COMMENT_KARMA_MIN
+        )
+    ):
+        # If they earned 100 comment karma/day they would have enough comment karma by now
         cache_hit = False
 
     if not cache_hit:
