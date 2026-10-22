@@ -23,7 +23,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       rabbitmq:
-        image: rabbitmq
+        image: rabbitmq:3.13
         ports:
           - 5672/tcp
       memcached:
