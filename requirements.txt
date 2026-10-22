@@ -1,12 +1,5 @@
-flake8==3.9.2
-mccabe==0.6.1
-pika==1.2.0
-psycopg2==2.8.6
-pycodestyle==2.7.0
-pydantic==1.8.2
-pyflakes==2.3.1
-pymemcache==3.4.3
-PyPika==0.48.2
+flake8==5.0.4
+psycopg2==2.9.9
+pydantic==1.10.26
+PyPika==0.51.1
 pytypeutils==0.0.1
-six==1.16.0
-typing-extensions==3.10.0.0
