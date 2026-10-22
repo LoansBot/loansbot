@@ -38,20 +38,20 @@ jobs:
           ARANGO_ROOT_PASSWORD: mango
     steps:
     - name: Setup Python ${{ matrix.python_version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python_version }}
     - name: Fetch LoansBot/loansbot
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         path: ./loansbot
     - name: Fetch LoansBot/logging
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: LoansBot/logging
         path: ./logging
     - name: Fetch LoansBot/shared
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: LoansBot/shared
         path: ./shared
@@ -82,7 +82,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82,F841,E302,E303,F401,E261,E306,E131,W292 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Fetch LoansBot/database
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: LoansBot/database
         path: ./database
